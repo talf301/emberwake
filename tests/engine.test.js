@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as E from '../public/engine/engine.js';
-import { CARDS, ENEMIES, RULES } from '../public/engine/data.js';
+import { CARDS, ENEMIES, RULES, COMPANIONS } from '../public/engine/data.js';
 import { legalActions, mulberry, playSmart } from './helpers.mjs';
 
 const ok = (s, a) => { const r = E.act(s, a); assert.ok(r.ok, `${JSON.stringify(a)} -> ${r.error}`); };
@@ -102,6 +102,7 @@ test('attack cards are useless outside battle', () => {
   setHand(s, ['hewing_blow']);
   bad(s, { type: 'play', index: 0, mode: 'basic' });
   bad(s, { type: 'play', index: 0, mode: 'improv:attack' });
+  bad(s, { type: 'play', index: 0, mode: 'improv:block' });
   ok(s, { type: 'play', index: 0, mode: 'improv:move' });
 });
 
@@ -111,7 +112,6 @@ test('battle: volley, guard, damage, attack', () => {
   setHand(s, ['hunters_shot', 'rime_dart', 'shieldwork', 'hewing_blow', 'steady_hand', 'trailcraft']);
   ok(s, { type: 'attack', hex: k });
   assert.equal(s.combat.phase, 'volley');
-  bad(s, { type: 'play', index: 3, mode: 'basic' }); // melee not allowed in volley
   ok(s, { type: 'play', index: 0, mode: 'basic' }); // ranged 2
   ok(s, { type: 'play', index: 0, mode: 'basic' }); // frost ranged 1
   assert.match(bad(s, { type: 'strike', targets: [1] }), /Needs 4/);
@@ -351,5 +351,128 @@ test('heuristic bot finishes games and sometimes wins', () => {
 test('enemy data sanity', () => {
   for (const e of Object.values(ENEMIES)) {
     assert.ok(e.armor > 0 && e.attack > 0 && e.renown > 0, e.id);
+  }
+});
+
+// ---- cases from the independent rules review
+test('review 1: effects played off-phase are banked, not lost', () => {
+  const s = E.newGame(9);
+  const k = arena(s, 'camp', ['bog_troll', 'ash_goblins']);
+  setHand(s, ['battle_fury', 'whiteout', 'hewing_blow']);
+  s.hero.shards = { ember: 1, frost: 2, verdant: 0, radiant: 0 };
+  ok(s, { type: 'attack', hex: k });
+  ok(s, { type: 'play', index: 2, mode: 'basic' }); // melee in the volley waits
+  assert.equal(E.strikePower(s, [1]), 0);
+  ok(s, { type: 'next' });
+  ok(s, { type: 'play', index: 0, mode: 'strong' }); // attack 5 + block 3
+  assert.equal(s.combat.blk.phys, 3);
+  ok(s, { type: 'play', index: 0, mode: 'strong' }); // snare + frost attack 4
+  ok(s, { type: 'choose', index: 0 }); // snare the troll
+  assert.equal(s.combat.enemies[0].snared, true);
+  ok(s, { type: 'guard', enemy: 1 });
+  ok(s, { type: 'next' });
+  assert.equal(s.combat.phase, 'attack');
+  assert.equal(E.strikePower(s, [0, 1]), 11);
+  ok(s, { type: 'strike', targets: [0, 1] });
+});
+
+test('review 2/11: revealing offers, skills and relics blocks undo', () => {
+  const s = E.newGame(5);
+  s.map[s.hero.pos].site = { type: 'sanctum', enemies: [], seen: true };
+  s.turn.sway = 6;
+  let before = s.irrev;
+  ok(s, { type: 'buy', id: s.offers.advanced[0] });
+  assert.ok(s.irrev > before);
+  const t = E.newGame(5);
+  const k = arena(t, 'barrow', ['ash_goblins']);
+  t.hero.pos = k;
+  setHand(t, ['hewing_blow', 'hewing_blow']);
+  t.hero.renown = 2;
+  ok(t, { type: 'attack', hex: k });
+  ok(t, { type: 'next' }); ok(t, { type: 'next' });
+  ok(t, { type: 'assign', enemy: 0, target: 'hero' });
+  ok(t, { type: 'play', index: 0, mode: 'basic' }); ok(t, { type: 'play', index: 0, mode: 'basic' });
+  before = t.irrev;
+  ok(t, { type: 'strike', targets: [0] });
+  assert.ok(t.irrev > before);
+});
+
+test('review 4: no trading after recovering', () => {
+  const s = E.newGame(5);
+  s.map[s.hero.pos].site = { type: 'village', enemies: [], seen: true };
+  s.offers.units = ['levy'];
+  setHand(s, ['wound', 'fair_words', 'fair_words', 'trailcraft']);
+  ok(s, { type: 'recover', index: 3 });
+  ok(s, { type: 'play', index: 0, mode: 'strong' });
+  bad(s, { type: 'recruit', id: 'levy' });
+});
+
+test('review 7: heal can be aimed at a companion or a hand wound', () => {
+  const s = E.newGame(5);
+  s.hero.units = [{ id: 'knight', spent: false, wounded: true }];
+  setHand(s, ['field_dressing', 'wound', 'renewal']);
+  ok(s, { type: 'play', index: 0, mode: 'basic' });
+  assert.equal(s.turn.heal, 1);
+  assert.equal(E.woundsInHand(s), 1);
+  ok(s, { type: 'healUnit', index: 0 });
+  assert.equal(s.hero.units[0].wounded, false);
+  ok(s, { type: 'play', index: 1, mode: 'basic' }); // renewal: no wounded unit now, auto-heals hand
+  assert.equal(E.woundsInHand(s), 0);
+  assert.equal(s.turn.heal, 1);
+  bad(s, { type: 'healWound' });
+});
+
+test('review 8: a self-inflicted wound can knock you out', () => {
+  const s = E.newGame(5);
+  const k = arena(s, 'camp', ['bog_troll']);
+  setHand(s, ['wound', 'wound', 'wound', 'wound', 'reckless_charge', 'hewing_blow']);
+  ok(s, { type: 'attack', hex: k });
+  ok(s, { type: 'play', index: 4, mode: 'basic' });
+  assert.ok(s.hero.hand.every((c) => c === 'wound'));
+  assert.equal(s.combat.atk.melee.phys, 5);
+});
+
+test('review 9: the Tyrant cannot be snared', () => {
+  const s = E.newGame(5);
+  const k = arena(s, 'citadel', ['ashen_tyrant']);
+  setHand(s, ['whiteout']);
+  s.hero.shards.frost = 2;
+  ok(s, { type: 'attack', hex: k });
+  bad(s, { type: 'play', index: 0, mode: 'basic' });
+});
+
+test('review 10: a flat move cost ignores menace', () => {
+  const s = E.newGame(5);
+  arena(s, 'camp', ['bog_troll']);
+  const to = Object.keys(E.moveOptions(s))[0];
+  assert.equal(E.moveCost(s, to), 3);
+  s.turn.flat = 2;
+  assert.equal(E.moveCost(s, to), 2);
+});
+
+test('review 12: two level rewards never offer the same card twice', () => {
+  const s = E.newGame(5);
+  const k = arena(s, 'camp', ['ember_wyrm', 'rime_wyrm']);
+  s.hero.renown = 2;
+  ok(s, { type: 'attack', hex: k });
+  s.combat.phase = 'attack';
+  s.combat.atk.melee.phys = 40;
+  ok(s, { type: 'strike', targets: [0, 1] });
+  assert.equal(s.hero.level, 4);
+  const taken = [];
+  while (s.pending.length) {
+    const p = s.pending.at(-1);
+    const opts = E.pendingOptions(s, p);
+    if (p.type === 'reward' && p.kind === 'advanced') taken.push(opts[0]);
+    ok(s, { type: 'choose', index: 0 });
+  }
+  assert.equal(taken.length, 2);
+  assert.notEqual(taken[0], taken[1]);
+});
+
+test('review 13: every round offers a village recruit', () => {
+  for (let seed = 1; seed <= 200; seed++) {
+    const s = E.newGame(seed);
+    assert.ok(s.offers.units.some((id) => COMPANIONS[id].sites.includes('village')), `seed ${seed}`);
   }
 });

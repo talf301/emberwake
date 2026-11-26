@@ -148,7 +148,7 @@ export const ENEMIES = Object.fromEntries([
   e('dread_knight', 'Dread Knight', 'elite', 5, 3, 6, { traits: ['brutal'], art: 'helm' }),
   e('ash_seer', 'Ash Seer', 'elite', 4, 5, 6, { el: 'ember', resist: ['ember', 'frost'], art: 'mage' }),
   e('siege_ogre', 'Siege Ogre', 'elite', 7, 5, 6, { art: 'troll' }),
-  e('ashen_tyrant', 'The Ashen Tyrant', 'boss', 8, 6, 10, { el: 'ember', resist: ['ember'], traits: ['warded'], art: 'crown' }),
+  e('ashen_tyrant', 'The Ashen Tyrant', 'boss', 8, 6, 10, { el: 'ember', resist: ['ember'], traits: ['warded', 'unyielding'], art: 'crown' }),
 ].map((x) => [x.id, x]));
 
 export const TRAIT_INFO = {
@@ -156,6 +156,7 @@ export const TRAIT_INFO = {
   brutal: { name: 'Brutal', text: 'Unguarded, it deals twice its attack value.' },
   venom: { name: 'Venom', text: 'Each wound it causes puts a second wound in your discard. A companion that takes its damage is slain.' },
   warded: { name: 'Warded', text: 'Cannot be targeted in the Volley phase.' },
+  unyielding: { name: 'Unyielding', text: 'Cannot be snared.' },
 };
 
 // ---- companions

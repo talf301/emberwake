@@ -7,8 +7,8 @@ export function legalActions(s) {
   if (s.phase === 'over') return out;
   if (s.pending.length) {
     const p = s.pending[s.pending.length - 1];
-    const n = p.type === 'aspect' ? ASPECTS.length : p.options.length;
-    for (let i = 0; i < n; i++) out.push({ type: 'choose', index: i });
+    const n = E.pendingOptions(s, p).length;
+    for (let i = 0; i < Math.max(1, n); i++) out.push({ type: 'choose', index: i });
     return out;
   }
   s.hero.hand.forEach((_, index) => {
@@ -18,6 +18,8 @@ export function legalActions(s) {
     for (const o of E.unitOptions(s, index)) if (o.ok) out.push({ type: 'unit', index, ability: o.ability });
   });
   for (const id of s.hero.skills) if (E.skillOk(s, id)) out.push({ type: 'skill', id });
+  s.hero.units.forEach((u, index) => { if (u.wounded && s.turn.heal > 0) out.push({ type: 'healUnit', index }); });
+  if (s.turn.heal > 0 && s.hero.hand.includes('wound')) out.push({ type: 'healWound' });
   const cb = s.combat;
   if (cb) {
     if (cb.phase === 'volley' || cb.phase === 'attack') {
@@ -53,7 +55,6 @@ export function legalActions(s) {
     for (const c of shop.cards) if (c.ok) out.push({ type: 'buy', id: c.id });
     if (shop.heal && shop.heal.ok) out.push({ type: 'buyHeal' });
   }
-  s.hero.units.forEach((u, index) => { if (u.wounded && s.turn.heal > 0) out.push({ type: 'healUnit', index }); });
   if (E.canRecover(s)) {
     const idx = s.hero.hand.findIndex((c) => c !== 'wound');
     out.push({ type: 'recover', index: Math.max(0, idx) });
@@ -90,7 +91,8 @@ function resolvePending(s, want) {
   while (s.pending.length && s.phase !== 'over') {
     const p = s.pending[s.pending.length - 1];
     let index = 0;
-    if (p.type === 'choice') {
+    if (p.type === 'reward' || p.type === 'ready') index = 0;
+    else if (p.type === 'choice') {
       const scores = p.options.map((o) => atomVal(o, want));
       index = scores.indexOf(Math.max(...scores));
     } else if (p.type === 'snare') {

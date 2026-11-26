@@ -264,8 +264,12 @@ export function newGame(seed, heroId = 'kaela') {
 
 function refreshUnitOffer(s) {
   s.decks.units.push(...s.offers.units.filter(Boolean));
-  // always keep one cheap companion on offer
   const offer = s.decks.units.splice(0, 3);
+  // a village can always recruit someone
+  if (!offer.some((id) => COMPANIONS[id].sites.includes('village'))) {
+    const i = s.decks.units.findIndex((id) => COMPANIONS[id].sites.includes('village'));
+    if (i >= 0) { const [id] = s.decks.units.splice(i, 1); s.decks.units.push(offer.pop()); offer.push(id); }
+  }
   s.offers.units = offer;
 }
 
@@ -292,7 +296,7 @@ function snareTargets(s, max) {
   return s.combat.enemies.map((en, i) => i).filter((i) => {
     const en = s.combat.enemies[i];
     const def = ENEMIES[en.id];
-    return !en.defeated && !en.snared && !en.guarded && def.group !== 'boss' && def.attack <= max;
+    return !en.defeated && !en.snared && !en.guarded && !def.traits.includes('unyielding') && def.attack <= max;
   });
 }
 function livingIdx(s) {
@@ -303,14 +307,15 @@ export function atomOk(s, a) {
   const cb = s.combat;
   const ph = cb && cb.phase;
   if ('move' in a || 'flat' in a) return !cb && !s.turn.acted;
-  if ('sway' in a || 'standing' in a) return !cb;
-  if ('heal' in a) return !cb && (woundsInHand(s) > 0 || s.hero.units.some((u) => u.wounded));
+  if ('sway' in a) return true;
+  if ('standing' in a) return !cb;
+  if ('heal' in a) return woundsInHand(s) > 0 || s.hero.units.some((u) => u.wounded);
   if ('draw' in a) return s.hero.deck.length > 0;
   if ('essence' in a || 'shard' in a) return true;
   if ('ready' in a || 'readyAll' in a) return s.hero.units.some((u) => u.spent);
-  if ('attack' in a) return ph === 'attack';
-  if ('ranged' in a || 'siege' in a) return ph === 'volley' || ph === 'attack';
-  if ('block' in a) return ph === 'guard';
+  // attack played early is banked for the Strike phase; block played in the Volley waits for the Guard
+  if ('attack' in a || 'ranged' in a || 'siege' in a) return !!cb;
+  if ('block' in a) return ph === 'volley' || ph === 'guard';
   if ('snare' in a) return (ph === 'volley' || ph === 'guard') && snareTargets(s, a.snare).length > 0;
   if ('weaken' in a) return !!cb && ph !== 'damage' && livingIdx(s).length > 0;
   if ('wound' in a) return false;
@@ -327,8 +332,10 @@ function gainShard(s, aspect, n = 1) {
 function addWound(s, n, toDiscard = false) {
   for (let i = 0; i < n; i++) (toDiscard ? s.hero.discard : s.hero.hand).push('wound');
 }
+// heal goes to hand wounds automatically unless a wounded companion gives you a choice
 function spendHeal(s) {
   const h = s.hero;
+  if (h.units.some((u) => u.wounded)) return;
   while (s.turn.heal > 0 && h.hand.includes('wound')) {
     h.hand.splice(h.hand.indexOf('wound'), 1);
     s.turn.heal--;
@@ -337,7 +344,7 @@ function spendHeal(s) {
 
 // returns true if a pending choice was pushed (caller must stop and stash the rest)
 function applyAtom(s, a) {
-  if ('wound' in a) { addWound(s, a.wound); log(s, 'You take a wound from the strain.'); return false; }
+  if ('wound' in a) { addWound(s, a.wound); log(s, 'You take a wound from the strain.'); checkKnockout(s); return false; }
   if (!atomOk(s, a)) return false;
   const t = s.turn;
   const cb = s.combat;
@@ -402,9 +409,9 @@ function gainRenown(s, n) {
   while (h.level < levelFor(h.renown)) {
     h.level++;
     if (h.level % 2 === 0) {
-      const adv = s.offers.advanced.filter(Boolean);
-      if (adv.length) s.pending.unshift({ type: 'reward', kind: 'advanced', options: [...adv], level: h.level });
+      if (s.offers.advanced.length) s.pending.unshift({ type: 'reward', kind: 'advanced', level: h.level });
       const skills = s.decks.skills.splice(0, 2);
+      s.irrev++;
       if (skills.length) s.pending.unshift({ type: 'reward', kind: 'skill', options: skills, level: h.level });
       log(s, `Level ${h.level}! Choose a skill and an advanced card.`);
     } else {
@@ -417,6 +424,7 @@ function gainRenown(s, n) {
 
 function relicReward(s) {
   const opts = s.decks.relics.splice(0, 2);
+  s.irrev++;
   if (opts.length) s.pending.push({ type: 'reward', kind: 'relic', options: opts });
   else s.pending.push({ type: 'aspect', kind: 'shard' }, { type: 'aspect', kind: 'shard' });
 }
@@ -425,6 +433,7 @@ function takeOffer(s, kind, id) {
   const offer = s.offers[kind];
   const i = offer.indexOf(id);
   if (i >= 0) offer[i] = s.decks[kind].length ? s.decks[kind].shift() : null;
+  s.irrev++;
   s.offers[kind] = offer.filter(Boolean);
 }
 
@@ -445,8 +454,8 @@ export function isBlocked(h) {
 export function moveCost(s, k) {
   const h = s.map[k];
   if (!h || !h.revealed || isBlocked(h)) return null;
-  const base = s.turn.flat !== null ? s.turn.flat : TERRAIN[h.terrain].cost[s.night ? 1 : 0];
-  return base + (menaced(s, s.hero.pos) ? 1 : 0);
+  if (s.turn.flat !== null) return s.turn.flat;
+  return TERRAIN[h.terrain].cost[s.night ? 1 : 0] + (menaced(s, s.hero.pos) ? 1 : 0);
 }
 export function moveOptions(s) {
   if (s.phase !== 'turn' || s.combat || s.pending.length || s.turn.acted) return {};
@@ -579,6 +588,7 @@ function endCombat(s) {
   const site = h.site;
   site.enemies = cb.enemies.filter((en) => !en.defeated).map((en) => en.id);
   s.combat = null;
+  spendHeal(s);
   if (site.enemies.length) {
     log(s, 'You break off the fight. The survivors hold their ground.');
     return null;
@@ -666,6 +676,7 @@ export function cardOptions(s, idx) {
     const affordable = cost === 0 || essenceAvail(s, card.aspect) >= cost;
     out.push({
       mode, cost, ok: applicable && affordable,
+      partial: applicable && card[mode].some((a) => !('wound' in a) && !atomOk(s, a)),
       why: !applicable ? 'No use right now' : !affordable ? `Needs ${cost} ${card.aspect} essence` : '',
     });
   }
@@ -701,7 +712,7 @@ export function shopHere(s) {
 }
 export function shopOptions(s) {
   const type = shopHere(s);
-  if (!type || s.phase !== 'turn' || s.combat || s.pending.length || s.turn.fought) return null;
+  if (!type || s.phase !== 'turn' || s.combat || s.pending.length || s.turn.fought || s.turn.recovered) return null;
   const sway = swayAvail(s);
   const res = { type, sway, recruits: [], cards: [], heal: null };
   for (const id of s.offers.units.filter(Boolean)) {
@@ -792,10 +803,18 @@ const ACTIONS = {
   },
   healUnit(s, { index }) {
     const unit = s.hero.units[index];
-    if (!unit || !unit.wounded || s.combat) return fail('Nothing to heal');
+    if (!unit || !unit.wounded) return fail('Nothing to heal');
     if (s.turn.heal < 1) return fail('No healing available');
     s.turn.heal--;
     unit.wounded = false;
+    return OK;
+  },
+  healWound(s) {
+    if (s.turn.heal < 1) return fail('No healing available');
+    const i = s.hero.hand.indexOf('wound');
+    if (i < 0) return fail('No wound in hand');
+    s.hero.hand.splice(i, 1);
+    s.turn.heal--;
     return OK;
   },
   dismiss(s, { index }) {
@@ -949,8 +968,10 @@ const ACTIONS = {
   choose(s, { index }) {
     const p = s.pending[s.pending.length - 1];
     if (!p) return fail('Nothing to choose');
-    const n = p.type === 'aspect' ? ASPECTS.length : p.options.length;
-    if (!Number.isInteger(index) || index < 0 || index >= n) return fail('Invalid choice');
+    const options = pendingOptions(s, p);
+    if (options.length === 0) { s.pending.pop(); return OK; }
+    if (!Number.isInteger(index) || index < 0 || index >= options.length) return fail('Invalid choice');
+    p.options = options;
     s.pending.pop();
     const rest = p.rest || [];
     if (p.type === 'choice') {
@@ -999,7 +1020,7 @@ const ACTIONS = {
     const bonus = here.site && here.site.type === 'keep' && here.site.conquered ? 1 : 0;
     if (s.roundTurn >= RULES.turnsPerRound) {
       log(s, s.night ? 'The night is spent.' : 'The day is spent.');
-      doEndRound(s);
+      doEndRound(s, bonus);
       return OK;
     }
     newTurn(s);
@@ -1013,7 +1034,7 @@ const ACTIONS = {
   },
 };
 
-function doEndRound(s) {
+function doEndRound(s, bonus = 0) {
   {
     const h = s.hero;
     if (s.round >= RULES.rounds) { finish(s, false); return; }
@@ -1033,10 +1054,17 @@ function doEndRound(s) {
       s.offers.advanced.push(s.decks.advanced.shift());
     }
     newTurn(s);
-    drawUp(s);
+    drawUp(s, bonus);
     reveal(s);
     log(s, s.night ? `Night falls (round ${s.round} of ${RULES.rounds}).` : `Dawn breaks (round ${s.round} of ${RULES.rounds}).`);
   }
+}
+
+// the options of a pending choice; level-up card rewards read the offer as it stands now
+export function pendingOptions(s, p) {
+  if (p.type === 'aspect') return ASPECTS;
+  if (p.type === 'reward' && p.kind === 'advanced' && !p.options) return s.offers.advanced.filter(Boolean);
+  return p.options;
 }
 
 export function act(s, action) {
