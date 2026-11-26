@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as E from '../js/engine.js';
-import { CARDS, ENEMIES, RULES } from '../js/data.js';
-import { legalActions, mulberry, playSmart } from '../tools/bot.js';
+import * as E from '../public/engine/engine.js';
+import { CARDS, ENEMIES, RULES } from '../public/engine/data.js';
+import { legalActions, mulberry, playSmart } from './helpers.mjs';
 
 const ok = (s, a) => { const r = E.act(s, a); assert.ok(r.ok, `${JSON.stringify(a)} -> ${r.error}`); };
 const bad = (s, a) => { const r = E.act(s, a); assert.ok(!r.ok, `${JSON.stringify(a)} should be illegal`); return r.error; };

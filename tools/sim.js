@@ -1,5 +1,5 @@
 // Balance read-out: node tools/sim.js [games]
-import { playSmart } from './bot.js';
+import { playSmart } from '../tests/helpers.mjs';
 const n = Number(process.argv[2] || 200);
 let wins = 0; const lv = []; const rounds = []; const renown = []; const wounds = [];
 for (let seed = 1; seed <= n; seed++) {

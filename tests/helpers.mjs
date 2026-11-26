@@ -1,6 +1,6 @@
 // Bots for testing: legal-action enumeration, a random player and a heuristic player.
-import * as E from '../js/engine.js';
-import { CARDS, ENEMIES, COMPANIONS, ASPECTS } from '../js/data.js';
+import * as E from '../public/engine/engine.js';
+import { CARDS, ENEMIES, COMPANIONS, ASPECTS } from '../public/engine/data.js';
 
 export function legalActions(s) {
   const out = [];
@@ -254,8 +254,18 @@ export function smartTurn(s) {
     if (pick) must(s, { type: 'recruit', id: pick.id });
     (s.visitedShops ||= []).push(s.hero.pos);
   }
+  // attack only what this hand can actually hurt
+  const potential = () => s.hero.hand.reduce((n, id) => {
+    if (id === 'wound') return n;
+    const c = CARDS[id];
+    return n + Math.max(1, atomVal(c.basic, ['attack', 'ranged', 'siege']), c.kind === 'basic' && E.essenceAvail(s, c.aspect) ? atomVal(c.strong, ['attack', 'ranged', 'siege']) - 1 : 0);
+  }, 0) + s.hero.units.reduce((n, u) => n + (u.spent || u.wounded ? 0 : Math.max(...COMPANIONS[u.id].abilities.map((ab) => atomVal(ab, ['attack', 'ranged', 'siege'])))), 0);
+  const killable = (k) => {
+    const need = Math.min(...s.map[k].site.enemies.map((id) => ENEMIES[id].armor * (ENEMIES[id].resist.includes('phys') ? 2 : 1)));
+    return potential() >= need + (s.map[k].site.type === 'citadel' ? 0 : 1);
+  };
   for (let hop = 0; hop < 8 && !s.turn.acted && s.phase !== 'over'; hop++) {
-    const atk = E.attackOptions(s).filter(isTarget);
+    const atk = E.attackOptions(s).filter(isTarget).filter(killable);
     if (atk.length) { must(s, { type: 'attack', hex: atk[0] }); fight(s); break; }
     const path = pathStep(s, isTarget) || pathStep(s, (k) => s.map[k].site && s.map[k].site.type === 'citadel');
     if (!path) break;
