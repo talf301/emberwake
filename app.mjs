@@ -290,7 +290,7 @@ function battleHTML() {
     if (resisted.length) notes.push(`${resisted.map((r) => ELN[r]).join(' and ')} attack is halved by resistance.`);
     const can = ui.sel.length > 0 && have >= need;
     read = `<div class="readout">
-      <div class="big ${can ? 'okc' : 'noc'}">${ui.sel.length ? `Power ${have} vs Armor ${need}` : 'Tap the foes to strike together'}</div>
+      <div class="big ${can ? 'okc' : 'noc'}">${ui.sel.length ? `Power ${have} vs Armor ${need}` : 'Tap a foe to target it'}</div>
       <div class="sums">${sums}${notes.length ? `<br>${notes.join(' ')}` : ''}</div>
       <div class="row"><button class="btn primary" data-act="strike" ${can ? '' : 'disabled'}>${glyph('attack')} Strike${ui.sel.length > 1 ? ` ${ui.sel.length} foes` : ''}</button></div>
     </div>`;
@@ -344,6 +344,7 @@ function hintText() {
     }[cb.phase];
   }
   const t = G.turn;
+  if (G.round >= RULES.rounds && !t.acted && E.canEndRound(G)) return 'The last night. Ending it now ends the game.';
   if (E.canEndRound(G) && G.hero.hand.filter((x) => x !== 'wound').length < 2) return 'Your deck is empty. End the round to reshuffle.';
   if (E.shopHere(G) && !t.fought) return `${SITES[E.shopHere(G)].name}: play Sway cards, then tap Site.`;
   if (t.acted) return 'You have acted. Use what is left, then end your turn.';
@@ -404,8 +405,9 @@ function actionsHTML() {
     if (E.canRecover(G)) b.push(`<button class="btn" data-act="sheet" data-type="recover">${glyph('heal')} Recover</button>`);
     const blocker = E.endTurnBlocker(G);
     if (E.canEndRound(G)) {
-      const prefer = G.hero.hand.filter((x) => x !== 'wound').length < 2;
-      b.push(`<button class="btn ${prefer ? 'primary' : ''}" data-act="endRound">${glyph(G.night ? 'sun' : 'moon')} End ${G.night ? 'night' : 'day'}</button>`);
+      const last = G.round >= RULES.rounds;
+      const prefer = !last && G.hero.hand.filter((x) => x !== 'wound').length < 2;
+      b.push(`<button class="btn ${prefer ? 'primary' : ''}" data-act="${last ? 'concede' : 'endRound'}">${last ? 'Concede' : `${glyph(G.night ? 'sun' : 'moon')} End ${G.night ? 'night' : 'day'}`}</button>`);
       b.push(`<button class="btn ${prefer ? '' : 'primary'} ${blocker ? 'off' : ''}" data-act="endTurn">End turn</button>`);
     } else b.push(`<button class="btn primary ${blocker ? 'off' : ''}" data-act="endTurn">End turn</button>`);
   }
@@ -461,11 +463,12 @@ function cardSheet(i) {
   if (c.kind === 'wound') {
     return sheetWrap(`<div class="cols">${cardHTML(id, { size: 'big' })}<div class="stack"><h2>Wound</h2>
       <p>A dead card. If your hand holds as many wounds as your hand limit, you are knocked out and lose your other cards.</p>
-      <p><b>Heal</b> removes wounds for good. <b>Recover</b> (instead of moving or acting) sends every wound in hand to your discard pile.</p></div></div>`);
+      <p><b>Heal</b> removes wounds for good. <b>Recover</b> (instead of moving or acting) sends every wound in hand to your discard pile.</p>
+      ${G.turn.heal > 0 ? `<button class="btn primary" data-act="healWound">${glyph('heal')} Heal this wound (1 Heal)</button>` : ''}</div></div>`);
   }
   const opts = E.cardOptions(G, i);
   const find = (m) => opts.find((o) => o.mode === m);
-  const btn = (o, label, cls = '') => (o ? `<button class="btn ${cls}" data-act="play" data-i="${i}" data-mode="${o.mode}" ${o.ok ? '' : 'disabled'}><span>${label}${!o.ok && o.why ? `<span class="why">${esc(o.why)}</span>` : ''}</span></button>` : '');
+  const btn = (o, label, cls = '') => (o ? `<button class="btn ${cls}" data-act="play" data-i="${i}" data-mode="${o.mode}" ${o.ok ? '' : 'disabled'}><span>${label}${!o.ok && o.why ? `<span class="why">${esc(o.why)}</span>` : ''}${o.ok && o.partial ? '<span class="why">Part of this has no use right now and would be lost</span>' : ''}</span></button>` : '');
   const basic = find('basic'); const strong = find('strong'); const channel = find('channel');
   const costDots = (n) => dot(c.aspect).repeat(n);
   const improv = ['move', 'sway', 'attack', 'block'].map((k) => {
@@ -492,7 +495,7 @@ function unitSheet(i) {
   const state = u.wounded ? 'Wounded: cannot act until healed (1 Heal).' : u.spent ? 'Spent: readies at the start of the next round.' : 'Ready. Using one ability spends them for the round.';
   return sheetWrap(`<h2>${glyph(d.art)} ${esc(d.name)}</h2><p>Armor ${d.armor}. ${state}</p>
     <div class="stack">${abil}
-    ${u.wounded && G.turn.heal > 0 && !G.combat ? `<button class="btn" data-act="healUnit" data-i="${i}">${glyph('heal')} Heal them (1 Heal)</button>` : ''}
+    ${u.wounded && G.turn.heal > 0 ? `<button class="btn" data-act="healUnit" data-i="${i}">${glyph('heal')} Heal them (1 Heal)</button>` : ''}
     ${G.combat ? '' : `<button class="btn small danger center" data-act="dismiss" data-i="${i}">Dismiss</button>`}</div>`);
 }
 
@@ -552,7 +555,8 @@ function hexSheet(k) {
 }
 
 function pendingSheet() {
-  const p = G.pending[G.pending.length - 1];
+  const p = { ...G.pending[G.pending.length - 1] };
+  p.options = E.pendingOptions(G, p);
   let title = 'Choose'; let body = '';
   const btns = (labels) => `<div class="stack">${labels.map((l, i) => `<button class="btn center" data-act="choose" data-i="${i}">${l}</button>`).join('')}</div>`;
   if (p.type === 'choice') { title = 'Choose one'; body = btns(p.options.map((o) => esc(E.effectText(o)))); }
@@ -614,7 +618,7 @@ function deckSheet() {
     <h3>Deck (${h.deck.length}, order hidden)</h3><p>${count(h.deck)}</p>
     <h3>Discard (${h.discard.length})</h3><p>${count(h.discard)}</p>
     <h3>Played this turn (${h.played.length})</h3><p>${count(h.played)}</p>
-    <p><i>When the deck runs out, end the ${G.night ? 'night' : 'day'} at the start of a turn to reshuffle everything. A ${G.night ? 'night' : 'day'} lasts at most ${RULES.turnsPerRound} turns.</i></p>`);
+    <p><i>${G.round >= RULES.rounds ? 'This is the last night: when it ends, the game ends.' : `When the deck runs out, end the ${G.night ? 'night' : 'day'} at the start of a turn to reshuffle everything.`} A ${G.night ? 'night' : 'day'} lasts at most ${RULES.turnsPerRound} turns.</i></p>`);
 }
 
 function essenceSheet() {
@@ -622,7 +626,7 @@ function essenceSheet() {
     <p>${ASPECTS.map((a) => `${dot(a)} ${ASPECT_INFO[a].name}`).join(' &nbsp; ')}</p>
     <ul>
       <li><b>Empowering</b> a card costs one essence of its aspect (Arcana cost one to play, two to overcast).</li>
-      <li><b>Channel</b> any card to turn it into one essence of its aspect. Essence fades at the end of the turn.</li>
+      <li><b>Channel</b> any card except a relic to turn it into one essence of its aspect. Essence fades at the end of the turn.</li>
       <li><b>The sky gives one free essence each turn:</b> Radiant or Verdant by day, Ember or Frost by night.</li>
       <li><b>Shards</b> ${dia('ember')} are stored essence. They keep between turns, up to ${RULES.shardCap} per aspect, and are spent last.</li>
     </ul>`);
@@ -663,9 +667,10 @@ function rulesSheet() {
     <ul>
       <li><b>Volley</b>: Ranged and Siege attacks strike before the foe does. Behind walls (keeps, spires, the citadel) only Siege counts here.</li>
       <li><b>Guard</b>: play Block equal to a foe's attack to stop it completely.</li>
-      <li><b>Damage</b>: each unguarded foe deals its attack. You take one wound per point of your armor, rounded up. A ready companion can absorb damage equal to its armor and becomes wounded.</li>
+      <li><b>Damage</b>: each unguarded foe deals its attack. You take one wound per point of your armor, rounded up. An unwounded companion can absorb damage equal to its armor and becomes wounded.</li>
+      <li>Attack played early is kept for the Strike; Block must be played by the Guard phase.</li>
       <li><b>Strike</b>: all your attacks count. To defeat foes, match their total armor. Unused attack is lost when you strike.</li>
-      <li>Resistance halves attacks of that kind. Ember attacks are best blocked with Frost block, Frost attacks with Ember block; other block counts half. Pure block always counts in full.</li>
+      <li>Resistance halves attacks of that kind, for the whole strike if any target resists, so strike mixed foes one at a time. Ember attacks are best blocked with Frost block, Frost attacks with Ember block; other block counts half. Pure block always counts in full.</li>
       <li>Defeated foes stay defeated. Survivors keep their site, and you may return.</li>
     </ul>
     <h3>Foe traits</h3>
@@ -673,7 +678,7 @@ function rulesSheet() {
     <h3>Wounds</h3>
     <ul>
       <li>Wounds are dead cards in your hand. With as many wounds as your hand limit you are knocked out and lose the rest of your hand.</li>
-      <li><b>Heal</b> removes them. <b>Recover</b> instead of moving and acting: give up one card and all wounds in hand go to your discard.</li>
+      <li><b>Heal</b> removes them (with a wounded companion you choose: tap the wound or the companion). <b>Recover</b> instead of moving, fighting or trading: give up one card and all wounds in hand go to your discard.</li>
     </ul>
     <h3>Sites</h3>
     <ul>${Object.entries(SITES).map(([, s]) => `<li><b>${s.name}.</b> ${s.text}</li>`).join('')}</ul>
@@ -721,6 +726,7 @@ function renderSheet() {
     else if (s.type === 'essence') html = essenceSheet();
     else if (s.type === 'log') html = logSheet();
     else if (s.type === 'menu') html = menuSheet();
+    else if (s.type === 'concede') html = sheetWrap('<h2>Concede?</h2><p>This is the last night. Ending it now ends the game with the Tyrant undefeated.</p><div class="stack"><button class="btn danger center" data-act="endRound">End the game</button><button class="btn center" data-act="closeSheet">Keep playing</button></div>');
   } else if (G && G.phase === 'over') html = resultSheet();
   root.innerHTML = html;
 }
@@ -766,6 +772,7 @@ const ACTS = {
   unit(d) { dispatch({ type: 'unit', index: Number(d.i), ability: Number(d.ability) }); },
   skill(d) { dispatch({ type: 'skill', id: d.id }); },
   healUnit(d) { dispatch({ type: 'healUnit', index: Number(d.i) }); },
+  healWound() { dispatch({ type: 'healWound' }); },
   dismiss(d) { dispatch({ type: 'dismiss', index: Number(d.i) }); },
   attack(d) { ui.sel = []; dispatch({ type: 'attack', hex: d.hexkey }); },
   foe(d) {
@@ -795,6 +802,7 @@ const ACTS = {
     dispatch({ type: 'endTurn' });
   },
   endRound() { dispatch({ type: 'endRound' }); },
+  concede() { ui.sheet = { type: 'concede' }; renderSheet(); },
 };
 
 function startGame(state) {
