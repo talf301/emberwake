@@ -878,6 +878,8 @@ function devScenario(name, s) {
     if (name !== 'combat') E.act(s, { type: 'next' });
     if (name === 'damage' || name === 'strike') E.act(s, { type: 'next' });
     if (name === 'strike') { E.act(s, { type: 'assign', enemy: 0, target: 0 }); E.act(s, { type: 'assign', enemy: 1, target: 'hero' }); }
+  } else if (name === 'camp') {
+    put('camp', ['wolf_riders', 'cinder_hounds']);
   } else if (name === 'citadel') {
     put('citadel', ['ashen_tyrant', 'dread_knight', 'ash_seer']);
     s.hero.hand = ['firestorm', 'wyrmtooth', 'aegis', 'pyre_wave', 'hewing_blow', 'whiteout', 'shieldwork', 'wound'];
