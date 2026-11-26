@@ -39,7 +39,7 @@ from the heuristic bot. After any change under `public/`, run `python3 -I tools/
 ## Development query parameters
 
 `?seed=7&hero=orrin` new game from a seed; `?auto=20` let the bot play 20 turns first;
-`?dev=combat|guard|damage|strike|citadel|shop|levelup|reward|night|explored|won` jump to a prepared state;
+`?dev=combat|guard|damage|strike|camp|citadel|shop|levelup|reward|night|explored|won` jump to a prepared state;
 `?sheet=card&i=2` open a sheet; `?click=sel;sel` click elements in order.
 `tools/shot.sh out.png 'dev=combat' 660` screenshots the app in a 390 px frame.
 

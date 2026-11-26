@@ -1,0 +1,849 @@
+<title>Emberwake UI Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: sticky contents rail on the left (wide screens), long reading column on the right;
+   each screenshot in a phone frame beside its numbered callouts, stacking on phones. */
+:root {
+  --bg: #14100e; --panel: #211a16; --panel2: #2c231d; --line: #3d3128;
+  --gold: #d9b25f; --ink: #efe3c8; --muted: #a8977a;
+  --ember: #e2552d; --frost: #4aa8e0; --verdant: #5fae4a; --radiant: #e6c15a; --relic: #b58cd9; --woundc: #8a2a2a;
+  --serif: Cochin, "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { background: var(--bg); }
+body {
+  background: var(--bg); color: var(--ink); font: 15px/1.6 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: var(--gold); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+code { font: 0.86em/1.4 var(--mono); background: var(--panel2); color: #f3d9a4; padding: 0.05em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+b, strong { color: #fff3d6; }
+h1, h2, h3 { font-family: var(--serif); color: var(--gold); text-wrap: balance; font-weight: 600; line-height: 1.2; }
+h1 { font-size: clamp(2rem, 5vw, 2.9rem); letter-spacing: 0.04em; margin: 0; }
+h2 { font-size: 1.75rem; margin: 0 0 0.6rem; }
+h3 { font-size: 1.2rem; margin: 1.6rem 0 0.5rem; }
+p { margin: 0 0 0.8rem; max-width: 68ch; }
+ul, ol { max-width: 68ch; padding-left: 1.3rem; margin: 0 0 0.9rem; }
+li { margin-bottom: 0.3rem; }
+
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 48px; }
+.toc { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; max-height: 100vh; overflow-y: auto; padding: 28px 0 24px; }
+.toc .lbl { font: 600 11px/1 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: t; }
+.toc li { counter-increment: t; margin: 0; }
+.toc a { display: flex; gap: 8px; padding: 5px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 14px; line-height: 1.35; }
+.toc a::before { content: counter(t); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 1.3em; text-align: right; }
+.toc a:hover { background: var(--panel); color: var(--gold); }
+main { min-width: 0; }
+
+header.top { padding: 40px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+header.top .kick { font: 600 12px/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ember); margin-bottom: 12px; }
+header.top .lede { color: var(--muted); font-size: 1.05rem; margin-top: 12px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.meta span b { color: var(--ink); font-weight: 600; }
+
+section { padding: 40px 0 8px; border-bottom: 1px solid var(--line); scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 12px); }
+section > .num { font: 600 12px/1 var(--sans); letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.src { font-size: 13px; color: var(--muted); margin-bottom: 1rem; }
+
+/* screenshot figure */
+.fig { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; margin: 1.4rem 0 2rem; }
+.fig.flip { grid-template-columns: minmax(0, 1fr) 300px; }
+.fig.flip .phone { order: 2; }
+.phone { position: relative; width: 300px; max-width: 100%; border: 7px solid #0a0706; border-radius: 30px; overflow: hidden; background: #000;
+  box-shadow: 0 0 0 1px #4a3c30, 0 18px 40px -12px #000; }
+.phone img { display: block; width: 100%; height: auto; }
+.mk { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: 21px; height: 21px; border-radius: 50%;
+  background: var(--ember); color: #fff; font: 700 11px/21px var(--sans); text-align: center;
+  box-shadow: 0 0 0 2px #14100e, 0 0 0 3.5px #ffe7c2; pointer-events: none; }
+.figtext { min-width: 0; }
+.figtext .cap { font-family: var(--serif); color: var(--gold); font-size: 1.15rem; margin-bottom: 0.5rem; }
+ol.co { list-style: none; padding: 0; counter-reset: c; }
+ol.co > li { counter-increment: c; position: relative; padding-left: 32px; margin-bottom: 0.55rem; }
+ol.co > li::before { content: counter(c); position: absolute; left: 0; top: 0.12em; width: 21px; height: 21px; border-radius: 50%;
+  background: var(--ember); color: #fff; font: 700 11px/21px var(--sans); text-align: center; }
+.q { font-size: 12.5px; color: var(--muted); margin-top: 0.8rem; }
+.q code { font-size: 11.5px; }
+.pair { display: flex; flex-wrap: wrap; gap: 20px; margin: 1.2rem 0 1.8rem; }
+.pair figure { margin: 0; width: 300px; max-width: 100%; }
+.pair figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* notes and tables */
+.note { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin: 1rem 0 1.4rem; max-width: 72ch; }
+.note p:last-child, .note ul:last-child { margin-bottom: 0; }
+.note .h { font: 600 11px/1 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.tw { overflow-x: auto; margin: 0.8rem 0 1.4rem; }
+table { border-collapse: collapse; font-size: 14px; min-width: 520px; }
+th, td { text-align: left; vertical-align: top; padding: 7px 12px 7px 0; border-bottom: 1px solid var(--line); }
+th { font: 600 11px/1.3 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+td:first-child { white-space: nowrap; }
+
+.sw { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; vertical-align: -0.05em; margin-right: 4px; }
+.k-ember { color: var(--ember); } .k-frost { color: var(--frost); } .k-verdant { color: var(--verdant); } .k-radiant { color: var(--radiant); }
+
+/* steps */
+ol.steps { list-style: none; padding: 0; counter-reset: s; max-width: 72ch; }
+ol.steps > li { counter-increment: s; position: relative; padding: 0 0 0.9rem 44px; margin: 0; }
+ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: -0.05em; width: 28px; height: 28px; border: 1.5px solid var(--gold);
+  border-radius: 50%; color: var(--gold); font: 600 14px/26px var(--serif); text-align: center; }
+ol.steps > li::after { content: ""; position: absolute; left: 14px; top: 30px; bottom: 4px; border-left: 1px dashed #5a4a3b; }
+ol.steps > li:last-child::after { display: none; }
+.math { font-family: var(--mono); font-size: 13px; color: #f3d9a4; background: var(--panel2); border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+.ex { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 8px; margin: 1.4rem 0 2rem; }
+.ex h3 { margin-top: 0; }
+
+/* layout diagram */
+.layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; margin: 1.4rem 0 1.6rem; }
+.mock { width: 250px; max-width: 100%; border: 7px solid #0a0706; border-radius: 28px; background: #1a1411; padding: 6px; display: flex; flex-direction: column; gap: 4px;
+  box-shadow: 0 0 0 1px #4a3c30; font: 600 11px/1.25 var(--sans); }
+.mock > div { border: 1px dashed #6b5a48; border-radius: 6px; padding: 5px 7px; display: flex; justify-content: space-between; gap: 6px; color: var(--ink); background: #241c17; }
+.mock > div i { font: 400 10px/1.25 var(--mono); color: var(--muted); font-style: normal; }
+.mock .stage { height: 190px; align-items: flex-start; background: repeating-linear-gradient(135deg, #1f2a1a 0 10px, #1b2417 10px 20px); border-color: #5f7a4a; }
+.mock .hand { height: 62px; background: #2a2018; }
+.mock .sheet { border-style: solid; border-color: var(--gold); background: #2c231d; }
+.regions { margin: 0; }
+.regions dt { font-weight: 600; color: #fff3d6; }
+.regions dd { margin: 0 0 0.6rem; color: var(--ink); }
+.regions dd code { font-size: 12px; }
+
+/* flow diagram */
+.flow { overflow-x: auto; margin: 1rem 0 1.6rem; }
+.flow svg { display: block; min-width: 720px; width: 100%; height: auto; }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 1rem 0 1.4rem; }
+.chain span { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: 13px/1.3 var(--mono); color: #f3d9a4; }
+.chain em { color: var(--muted); font-style: normal; }
+
+footer { color: var(--muted); font-size: 13px; padding-top: 24px; }
+
+@media (max-width: 920px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .toc { position: static; max-height: none; padding: 24px 0 0; }
+  .toc ol { columns: 2; column-gap: 16px; }
+  .toc li { break-inside: avoid; }
+}
+@media (max-width: 680px) {
+  .fig, .fig.flip, .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .fig.flip .phone { order: 0; }
+  .phone, .mock { margin: 0 auto; }
+  .toc ol { columns: 1; }
+  .pair figure { margin: 0 auto; }
+  .ex { padding: 16px 14px 4px; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="lbl">Contents</div>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#title">Title screen</a></li>
+    <li><a href="#game">The game screen</a></li>
+    <li><a href="#cards">Cards</a></li>
+    <li><a href="#moving">Moving</a></li>
+    <li><a href="#fight">Starting a fight</a></li>
+    <li><a href="#battle">Battle</a></li>
+    <li><a href="#choices">Choices and rewards</a></li>
+    <li><a href="#sites">Sites and trading</a></li>
+    <li><a href="#wounds">Wounds and recovery</a></li>
+    <li><a href="#info">Hero, cards, menu, rules</a></li>
+    <li><a href="#end">End of game</a></li>
+    <li><a href="#examples">Worked examples</a></li>
+    <li><a href="#agent">For the next agent</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="top">
+  <div class="kick">Interface guide</div>
+  <h1>Emberwake</h1>
+  <p class="lede">The phone interface of Emberwake, a solo deck-building hex adventure, screen by screen: what each control does, which engine call backs it, and where the code lives. Written for the owner and for the next agent to work on the UI.</p>
+  <div class="meta">
+    <span><b>Code</b> <code>public/app.mjs</code>, <code>public/style.css</code></span>
+    <span><b>Rules</b> <code>public/engine/engine.js</code>, <code>data.js</code></span>
+    <span><b>Shots</b> 390×760 pt, headless Chrome, <code>tools/shot.sh</code></span>
+  </div>
+</header>
+
+<!-- 1 -->
+<section id="overview">
+  <div class="num">Section 1</div>
+  <h2>Overview</h2>
+  <p>The game is played in portrait, one-handed. The game screen is a single column built by <code>renderGame()</code>. Everything else (card details, sites, the hero, the menu, choices, the result) is a <b>bottom sheet</b> built by <code>renderSheet()</code> and laid over the game. Tapping the dark backdrop closes a sheet. A sheet that needs a decision (a pending choice or the game-over result) is modal: it has no grab bar and the backdrop does not close it.</p>
+
+  <div class="layout">
+    <div class="mock" role="img" aria-label="Diagram of the game screen regions from top to bottom">
+      <div>Top bar <i>topHTML</i></div>
+      <div class="stage">Stage <i>mapSVG / battleHTML</i></div>
+      <div>Resource strip <i>stripHTML</i></div>
+      <div>Hint line <i>hintText</i></div>
+      <div>Action bar <i>actionsHTML</i></div>
+      <div>Party row <i>partyHTML</i></div>
+      <div class="hand">Hand <i>handHTML</i></div>
+      <div class="sheet">Bottom sheet, over all of it <i>renderSheet</i></div>
+    </div>
+    <dl class="regions">
+      <dt>Top bar</dt><dd>Round pips, day or night and turn, renown, armor, standing, menu.</dd>
+      <dt>Stage</dt><dd>The hex map. In a battle it is replaced by the battle panel.</dd>
+      <dt>Resource strip</dt><dd>Move, Sway, Heal, Essence, Shards, Deck. Scrolls sideways.</dd>
+      <dt>Hint line</dt><dd>One sentence saying what to do next.</dd>
+      <dt>Action bar</dt><dd>Undo, then context buttons and the main commit button.</dd>
+      <dt>Party row</dt><dd>Companions and skills. Hidden when there are none.</dd>
+      <dt>Hand</dt><dd>The cards in hand, overlapped to fit the width.</dd>
+      <dt>Bottom sheet</dt><dd>Rendered into <code>#sheet-root</code>, separate from <code>#app</code>.</dd>
+    </dl>
+  </div>
+
+  <h3>How a tap becomes a state change</h3>
+  <p>Every tap goes through one delegated <code>click</code> listener on <code>document</code>. It finds the closest element with a <code>data-act</code> attribute and calls the function of that name in the <code>ACTS</code> table, passing the element's <code>dataset</code>. Disabled buttons are ignored. Map hexes are the exception: they use pointer events (<code>onHexTap</code>), so the same gesture can also pan and pinch the map.</p>
+  <div class="chain" aria-label="Tap flow">
+    <span>data-act="play"</span><em>→</em><span>ACTS.play(dataset)</span><em>→</em><span>dispatch(action)</span><em>→</em><span>E.act(G, action)</span><em>→</em><span>save()</span><em>→</em><span>render()</span>
+  </div>
+  <p><code>dispatch()</code> calls the engine. If the engine refuses, its error text is shown as a toast and nothing else happens. If it accepts, the new log line (if any) is toasted, an undo snapshot is kept, the open sheet closes (unless the call passed <code>keepSheet</code>), the state is saved to <code>localStorage</code> under <code>emberwake.save.v1</code>, and the whole screen re-renders. The interface computes no rules: it asks the engine what is legal and draws that.</p>
+</section>
+
+<!-- 2 -->
+<section id="title">
+  <div class="num">Section 2</div>
+  <h2>Title screen</h2>
+  <div class="src">Built by <code>renderTitle()</code>. Shown whenever there is no game in memory.</div>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:01-title}}" alt="Title screen with two hero cards, New game and How to play buttons">
+      <span class="mk" style="--x:27%;--y:24%">1</span><span class="mk" style="--x:73%;--y:24%">2</span>
+      <span class="mk" style="--x:91%;--y:51.3%">3</span><span class="mk" style="--x:91%;--y:58.3%">4</span><span class="mk" style="--x:88%;--y:96.6%">5</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Choose a hero and start</p>
+      <ol class="co">
+        <li><b>Kaela Cinderblade</b>, the Exiled Flameguard. Starts with Cinder Lash and one Ember shard. The selected hero has a gold border (<code>data-act="pickHero"</code>).</li>
+        <li><b>Orrin Wayfarer</b>, Ranger of the Marches. Starts with Pathfinder and one Verdant shard.</li>
+        <li><b>New game</b> (<code>newGame</code>) starts a game with a random seed and the selected hero. When a save exists, a <b>Continue (round N, level N)</b> button appears above it and takes the gold style. There is no save in this shot, so it is absent.</li>
+        <li><b>How to play</b> opens the rules sheet, which works without a game.</li>
+        <li>Version stamp from <code>version.mjs</code>: a content hash written by <code>tools/build_sw.py</code> (here <code>1ac2a233ac</code>), or “dev” when unbuilt.</li>
+      </ol>
+      <p class="q">Query: none (fresh browser profile).</p>
+    </div>
+  </figure>
+</section>
+
+<!-- 3 -->
+<section id="game">
+  <div class="num">Section 3</div>
+  <h2>The game screen</h2>
+  <div class="src">Built by <code>renderGame()</code> from <code>topHTML</code>, the stage, <code>stripHTML</code>, <code>hintText</code>, <code>actionsHTML</code>, <code>partyHTML</code> and <code>handHTML</code>.</div>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:02-map-start}}" alt="Start of a game: hex map with the hero in the middle and five cards in hand">
+      <span class="mk" style="--x:14%;--y:5.6%">1</span><span class="mk" style="--x:41%;--y:3.4%">2</span><span class="mk" style="--x:62%;--y:5.8%">3</span>
+      <span class="mk" style="--x:93%;--y:6.4%">4</span><span class="mk" style="--x:38%;--y:8.8%">5</span><span class="mk" style="--x:58%;--y:28%">6</span>
+      <span class="mk" style="--x:56%;--y:43%">7</span><span class="mk" style="--x:28%;--y:44%">8</span><span class="mk" style="--x:84%;--y:62%">9</span>
+      <span class="mk" style="--x:44%;--y:68.6%">10</span><span class="mk" style="--x:95%;--y:75.2%">11</span><span class="mk" style="--x:8%;--y:79.6%">12</span>
+      <span class="mk" style="--x:76%;--y:79.6%">13</span><span class="mk" style="--x:96%;--y:90%">14</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">First turn of a new game</p>
+      <ol class="co">
+        <li><b>Round pips.</b> Six rounds: sun for a day, moon for a night. The current one glows, past ones fade. Tapping them opens the rules.</li>
+        <li><b>Day 1, turn 1/8.</b> A day or night lasts at most 8 turns.</li>
+        <li><b>Stat pills</b>: renown star with next level threshold and level (<code>0 /3 L1</code>), armor (2), standing (0). All three open the Hero sheet.</li>
+        <li><b>Menu</b> button (<code>data-type="menu"</code>).</li>
+        <li><b>Sight label</b>, top left of the map: “Day: you see 2 hexes”.</li>
+        <li><b>Site badge</b>. Gold ring here: a neutral site (a sanctum).</li>
+        <li><b>The hero</b>: a token in the hero's colour with a helm.</li>
+        <li><b>Move cost badge.</b> Grey and dashed because Move is 0: the hex is enterable but not affordable yet.</li>
+        <li><b>Chronicle</b> (book, opens the log) and <b>compass</b> (recentres on the hero).</li>
+        <li><b>Essence chip.</b> “sun:” followed by a gold and a green dot: the free Radiant or Verdant essence the sky offers this turn.</li>
+        <li><b>Hint line.</b> “Tap a card to play it. Move cards let you tap a glowing hex.”</li>
+        <li><b>Undo</b>, dim because there is nothing to undo.</li>
+        <li><b>End turn</b>, dim: the engine would refuse it (you must play or discard a card first). Tapping it shows the reason as a toast.</li>
+        <li><b>Hand</b>: Fair Words, Field Dressing, Trailcraft, Hewing Blow, Trailcraft. None is dimmed, so each has a playable effect.</li>
+      </ol>
+      <p class="q">Query: <code>seed=7</code></p>
+    </div>
+  </figure>
+
+  <h3>Top bar (<code>topHTML</code>)</h3>
+  <p>Six round pips, the day or night and turn counter, three stat pills (renown, armor, standing) that all open the Hero sheet, and the menu button. Renown reads <code>renown /next L level</code>; the threshold disappears at the top level. Standing shows a sign when positive (<code>+4</code> in the mid-game shot below).</p>
+
+  <h3>Stage: the map (<code>mapSVG</code>)</h3>
+  <ul>
+    <li><b>Drag</b> to pan, <b>pinch</b> to zoom (0.55× to 2.2×). A drag longer than 8 px is not a tap. The view recentres when the hero moves; the compass button recentres on demand.</li>
+    <li><b>Terrain</b> art per hex: plains, forest, hills, marsh, ash wastes, mountain, lake. Unexplored hexes are drawn dark with no art.</li>
+    <li><b>Site badges.</b> Gold ring: neutral or friendly. Red ring: defended. Green ring: conquered. Dimmed: used up (a visited wayshrine, a cleared camp, lair, barrow or ruin). A small red number at the top right counts the defenders when there are several. A camp or lair with defenders shows the first foe's glyph instead of the site icon.</li>
+    <li>When the hero stands on a site, the badge moves up and the hero token sits below it.</li>
+  </ul>
+
+  <figure class="fig flip">
+    <div class="phone"><img src="{{shot:22-midgame}}" alt="Mid-game map with several sites, a village under the hero and a companion and a skill in the party row">
+      <span class="mk" style="--x:81%;--y:6.2%">1</span><span class="mk" style="--x:22%;--y:17%">2</span><span class="mk" style="--x:58%;--y:34%">3</span>
+      <span class="mk" style="--x:44%;--y:45.4%">4</span><span class="mk" style="--x:36%;--y:36.6%">5</span><span class="mk" style="--x:33%;--y:66.4%">6</span>
+      <span class="mk" style="--x:20%;--y:75.5%">7</span><span class="mk" style="--x:90%;--y:75.5%">8</span><span class="mk" style="--x:3%;--y:80.6%">9</span>
+      <span class="mk" style="--x:61%;--y:80.6%">10</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Day 2, turn 4, after 16 bot turns as Orrin</p>
+      <ol class="co">
+        <li>Standing <b>+4</b>; renown 7 of 8 at level 2; armor 3.</li>
+        <li><b>Red ring with a red 2</b>: a defended site with two defenders.</li>
+        <li><b>Red pulsing hex with a sword badge</b>: a site the hero can attack from here.</li>
+        <li><b>Hero on a village.</b> The village badge sits above the token.</li>
+        <li><b>Dashed grey cost badges</b> (4 here): not enough Move.</li>
+        <li><b>Sway 2 (+2)</b>: the bracket is the Standing modifier, shown only on a trading site.</li>
+        <li><b>Site</b> button: the hero stands on a site. Opens the site sheet.</li>
+        <li><b>End turn</b> dim: no card played yet this turn.</li>
+        <li><b>Companion</b> pill (solid border): Hedge Healer.</li>
+        <li><b>Skill</b> pill (dashed border): Thick Hide.</li>
+      </ol>
+      <p class="q">Query: <code>seed=11&amp;auto=16&amp;hero=orrin</code></p>
+    </div>
+  </figure>
+
+  <h3>Resource strip (<code>stripHTML</code>)</h3>
+  <p><b>Move</b>, <b>Sway</b>, and <b>Heal</b> (only while Heal is banked) are hidden during a battle. <b>Essence</b> shows stored essence as coloured dots, then <code>sun:</code> (or <code>dusk:</code> at night) and the two aspects the sky offers this turn, until that free essence is used. <b>Shards</b> shows stored shards as diamonds. <b>Deck</b> counts cards left. Essence and Shards open the essence sheet; Deck opens the cards sheet. A chip at zero is dimmed. The strip scrolls sideways when it overflows.</p>
+
+  <h3>Hint line (<code>hintText</code>)</h3>
+  <p>One sentence chosen by state, in priority order: the battle phase; the last night; an empty deck (“End the round to reshuffle”); standing on a trading site; already acted; nothing played yet; otherwise “Tap a glowing hex to move, or a red hex to attack.”</p>
+
+  <h3>Action bar (<code>actionsHTML</code>)</h3>
+  <div class="tw"><table>
+    <tr><th>Button</th><th>Shown when</th><th>Does</th></tr>
+    <tr><td>Undo (left)</td><td>Always; dim when nothing to undo</td><td>Restores the last snapshot. See <a href="#agent">Undo</a>.</td></tr>
+    <tr><td>Site</td><td>The hero's hex has a site</td><td>Opens <code>hexSheet</code> for the hero's hex.</td></tr>
+    <tr><td>Recover</td><td><code>E.canRecover</code>: wounds in hand, nothing moved or done this turn</td><td>Opens the Recover sheet.</td></tr>
+    <tr><td>End day / End night</td><td><code>E.canEndRound</code>: deck empty, start of a turn</td><td>Ends the round. Gold when fewer than two non-wound cards remain. In the final round it reads <b>Concede</b> and opens a confirmation sheet.</td></tr>
+    <tr><td>End turn</td><td>Outside battle</td><td>Dim while <code>E.endTurnBlocker</code> returns a reason; tapping then toasts the reason instead of acting.</td></tr>
+    <tr><td>Phase button</td><td>In battle</td><td>To Guard ▸, Take the hits ▸ / To Strike ▸, Assign damage above (disabled), Break off ▸ / End battle.</td></tr>
+  </table></div>
+
+  <h3>Party row (<code>partyHTML</code>) and hand (<code>handHTML</code>)</h3>
+  <p>Companions are solid pills; a spent companion is dim, a wounded one turns red with a ✖. Skills are dashed pills, dim once used for the turn or round. Each opens its own sheet.</p>
+  <p>The hand overlaps cards so all of them fit: the step between cards is 50 to 88 px, from the window width up to 520 px. A <b>dimmed card</b> has no playable effect now (no Play, Empower, Improvise or Unleash is legal), but it can still be channelled or discarded. Tap any card to open its sheet.</p>
+</section>
+
+<!-- 4 -->
+<section id="cards">
+  <div class="num">Section 4</div>
+  <h2>Cards</h2>
+  <div class="src">Card face: <code>cardHTML()</code>. Card sheet: <code>cardSheet(i)</code>, options from <code>E.cardOptions(G, i)</code>.</div>
+  <h3>Card anatomy</h3>
+  <ul>
+    <li><b>Aspect colour</b>: <span class="k-ember">Ember red</span>, <span class="k-frost">Frost blue</span>, <span class="k-verdant">Verdant green</span>, <span class="k-radiant">Radiant gold</span>, <span style="color:var(--relic)">Relic purple</span>, <span style="color:#c45a5a">Wound dark red</span>.</li>
+    <li><b>Name</b> at the top, <b>glyph</b> in the middle.</li>
+    <li><b>Light box</b>: the basic effect. <b>Dark box</b>: the empowered effect, led by one coloured pip per essence it costs. A relic's dark box is led by “Unleash:”.</li>
+    <li><b>Corner mark</b>: ▲ advanced, ✦ arcana, ◆ relic. Starter cards have none.</li>
+  </ul>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:03-card-sheet}}" alt="Card sheet for Trailcraft with Play, Empower, Channel, Improvise and Discard buttons">
+      <span class="mk" style="--x:49%;--y:58.3%">1</span><span class="mk" style="--x:4%;--y:89.5%">2</span><span class="mk" style="--x:4%;--y:94%">3</span>
+      <span class="mk" style="--x:95%;--y:65.6%">4</span><span class="mk" style="--x:95%;--y:72.4%">5</span><span class="mk" style="--x:95%;--y:79%">6</span>
+      <span class="mk" style="--x:96%;--y:86.6%">7</span><span class="mk" style="--x:95%;--y:95.2%">8</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Trailcraft, first turn</p>
+      <ol class="co">
+        <li><b>Grab bar</b>: a dismissable sheet. Tap the dark backdrop above to close.</li>
+        <li>Light box: basic <b>Move 2</b>.</li>
+        <li>Dark box: one green pip, empowered <b>Move 4</b>.</li>
+        <li><b>Play</b>: the basic effect for free. Gold because it is the obvious choice.</li>
+        <li><b>Empower</b>: pay one Verdant essence for Move 4. Here the free daytime Verdant from the sky pays.</li>
+        <li><b>Channel</b>: discard the card for one Verdant essence.</li>
+        <li><b>Improvise</b> row: discard for Move 1, Sway 1, Attack 1 or Block 1. Each is enabled only when the engine allows it.</li>
+        <li><b>Discard</b> with no effect (not allowed in battle).</li>
+      </ol>
+      <p class="q">Query: <code>seed=7&amp;sheet=card&amp;i=2</code></p>
+    </div>
+  </figure>
+  <h3>Card sheet buttons</h3>
+  <ul>
+    <li><b>Play</b>: the basic effect. Arcana cost 1 essence to play.</li>
+    <li><b>Empower</b>: the strong effect, paid with essence of the card's aspect (1 for most cards, 2 to overcast an arcana). A relic's second effect is <b>Unleash</b> instead, which destroys the relic.</li>
+    <li><b>Channel</b>: discard for one essence of the card's aspect. Not offered for relics.</li>
+    <li><b>Improvise</b>: four small buttons, each a discard for 1 of Move, Sway, Attack or Block.</li>
+    <li><b>Discard</b>.</li>
+  </ul>
+  <p>Each button is one entry from <code>E.cardOptions</code>. A disabled button prints the engine's reason (<code>o.why</code>) under its label. An enabled button that would waste part of its effect prints “Part of this has no use right now and would be lost” (<code>o.partial</code>). The gold (primary) style goes to Play when it is legal, otherwise to Empower.</p>
+
+  <figure class="fig flip">
+    <div class="phone"><img src="{{shot:16-essence}}" alt="Essence and shards sheet listing the four aspects and the essence rules"></div>
+    <div class="figtext">
+      <p class="cap">Essence and shards sheet</p>
+      <p>Opened from the Essence or Shards chip (<code>essenceSheet</code>). It names the four aspects with their colours and states the rules.</p>
+      <div class="note"><div class="h">Payment order</div>
+        <p>Essence is spent in this order: channelled essence first, then the free sky essence (Radiant or Verdant by day, Ember or Frost by night, once per turn), then stored shards. Shards keep between turns, at most 3 per aspect. Channelled essence fades at the end of the turn.</p>
+      </div>
+      <p class="q">Query: <code>seed=7&amp;sheet=essence</code></p>
+    </div>
+  </figure>
+</section>
+
+<!-- 5 -->
+<section id="moving">
+  <div class="num">Section 5</div>
+  <h2>Moving</h2>
+  <div class="src">Glow and badges from <code>E.moveOptions(G)</code>; tap handled by <code>onHexTap</code>, which dispatches <code>{type:'move', to}</code>.</div>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:04-move-ready}}" alt="Map with four glowing hexes each showing a green cost badge of 2, Move 4 in the strip">
+      <span class="mk" style="--x:4%;--y:67.4%">1</span><span class="mk" style="--x:28%;--y:51.6%">2</span><span class="mk" style="--x:58%;--y:35.6%">3</span>
+      <span class="mk" style="--x:52%;--y:67.4%">4</span><span class="mk" style="--x:8%;--y:79.6%">5</span><span class="mk" style="--x:76%;--y:79.6%">6</span>
+      <span class="mk" style="--x:70%;--y:85%">7</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">After empowering Trailcraft</p>
+      <ol class="co">
+        <li><b>Move 4.</b></li>
+        <li><b>Green cost badge</b>: affordable. The hex outline glows and pulses.</li>
+        <li>The four adjacent plains hexes each cost 2. Mountains and the forest are not offered.</li>
+        <li><b>Essence 0</b>: the sky essence was spent on the Empower, so the “sun:” offer is gone.</li>
+        <li><b>Undo</b> is now lit: a play reveals nothing, so it can be undone.</li>
+        <li><b>End turn</b> is now gold: a card has been played.</li>
+        <li>The hand is down to four cards.</li>
+      </ol>
+      <p class="q">Query: <code>seed=7&amp;click=.hand .card:nth-child(3) .c-art svg;[data-mode="strong"]</code></p>
+    </div>
+  </figure>
+  <ul>
+    <li><b>Tap a glowing hex</b> to move. The map recentres on the hero. Tapping a grey dashed hex toasts “Needs N Move (you have M)”.</li>
+    <li><b>Tap any other revealed hex</b> to open the hex sheet (<code>hexSheet</code>): terrain, Move cost by day and by night, the site's rules, known defenders, and whether it can be attacked. An unexplored hex says “Move closer to reveal this land.”</li>
+    <li><b>Night</b> tints the map. Sight drops from 2 hexes to 1. Forest costs 4 and ash wastes 3.</li>
+    <li>Leaving a hex next to a reaver camp or wyrm lair costs +1 (see the 3-cost badges in <a href="#fight">section 6</a>).</li>
+  </ul>
+  <div class="pair">
+    <figure>
+      <div class="phone"><img src="{{shot:05-hex-info}}" alt="Fully explored map with a Keep sheet open showing Ironclads">
+        <span class="mk" style="--x:73%;--y:15%">1</span><span class="mk" style="--x:30%;--y:62.8%">2</span><span class="mk" style="--x:95%;--y:66%">3</span>
+        <span class="mk" style="--x:73%;--y:76%">4</span><span class="mk" style="--x:52%;--y:96.2%">5</span>
+      </div>
+      <figcaption>
+        <ol class="co">
+          <li>The tapped hex: a keep (red ring).</li>
+          <li>Title: site name and icon.</li>
+          <li>“Forest. Move cost 3 by day, 4 by night.” Then the site's rules text.</li>
+          <li>Known defender: Ironclads, armor 3, attack 4, resists physical.</li>
+          <li>“Stand next to it to attack.” No Attack button: the hero is not adjacent.</li>
+        </ol>
+        Query: <code>dev=explored&amp;click=hex:2,5</code>
+      </figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><img src="{{shot:19-night}}" alt="Night map with a Recover button and a wound in hand">
+        <span class="mk" style="--x:9%;--y:6.4%">1</span><span class="mk" style="--x:38%;--y:13.4%">2</span><span class="mk" style="--x:48%;--y:67.4%">3</span>
+        <span class="mk" style="--x:20%;--y:79.6%">4</span><span class="mk" style="--x:70%;--y:84%">5</span>
+      </div>
+      <figcaption>
+        <ol class="co">
+          <li>Second pip (a moon) glows: Night 1.</li>
+          <li>“Night: you see 1 hex; forests slow, wastes quicker.”</li>
+          <li>“dusk:” with Ember and Frost dots.</li>
+          <li><b>Recover</b> appears: a wound is in hand and nothing has been done.</li>
+          <li>The Wound card. Eight cards in hand, so they overlap tightly.</li>
+        </ol>
+        Query: <code>dev=night</code>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="fight">
+  <div class="num">Section 6</div>
+  <h2>Starting a fight</h2>
+  <div class="src">Red hexes from <code>E.attackOptions(G)</code>. The Attack button dispatches <code>{type:'attack', hex}</code>.</div>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:06-attack-confirm}}" alt="Reaver Camp sheet showing Wolf Riders and Cinder Hounds with a red Attack button">
+      <span class="mk" style="--x:76%;--y:41%">1</span><span class="mk" style="--x:28%;--y:40%">2</span><span class="mk" style="--x:96%;--y:62.6%">3</span>
+      <span class="mk" style="--x:22%;--y:75%">4</span><span class="mk" style="--x:94%;--y:84%">5</span><span class="mk" style="--x:72%;--y:95.2%">6</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">A reaver camp next to the hero</p>
+      <ol class="co">
+        <li><b>Red pulsing hex</b>, sword badge at the bottom, red “2” for two defenders, Wolf Riders glyph as the site icon.</li>
+        <li><b>Cost badges now read 3</b>: leaving a hex next to a camp costs +1.</li>
+        <li>Site rules: “Marauders. Attack them from an adjacent hex…”</li>
+        <li>Foe card (<code>foeHTML</code>): Wolf Riders, armor 4, attack 3, Swift.</li>
+        <li>Cinder Hounds: armor 3, attack 4 in red (an Ember attack), resists Ember.</li>
+        <li><b>Attack</b>: the confirmation step. Tapping the red hex only opens this sheet.</li>
+      </ol>
+      <p class="q">Query: <code>dev=camp&amp;click=hex:0,9</code> (the <code>camp</code> scenario is in the working tree, not yet committed or in the README)</p>
+    </div>
+  </figure>
+  <p>Camps, lairs, keeps, spires and the citadel are attacked from an adjacent hex. Barrows and ruins are attacked from inside the hex. Winning a walled site moves the hero in. Starting a battle spends the turn's action and sets Move to 0. It also bumps <code>state.irrev</code>, so the undo history is cleared.</p>
+</section>
+
+<!-- 7 -->
+<section id="battle">
+  <div class="num">Section 7</div>
+  <h2>Battle</h2>
+  <div class="src">Built by <code>battleHTML()</code>, which replaces the map in the stage. Previews from <code>E.strikePower</code>, <code>E.blockPower</code>, <code>E.blockNeeded</code>, <code>E.canTarget</code>.</div>
+  <p>Phase tabs across the top show progress. Foe cards show glyph, name, armor, attack (red for Ember, blue for Frost), trait and resistance tags, and a stamp when <b>Defeated</b>, <b>Guarded</b> or <b>Snared</b>. Under the foes is the <b>readout</b>: a live preview of what would happen, the sums behind it, and the phase's commit button. The action bar's main button moves to the next phase.</p>
+
+  <div class="flow" role="img" aria-label="Battle phase flow: Volley, Guard, Damage, Strike">
+    <svg viewBox="0 0 960 270" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d9b25f"/></marker></defs><g font-size="13" fill="#efe3c8"><rect x="10" y="14" width="200" height="176" rx="12" fill="#211a16" stroke="#d9b25f" stroke-width="1.5"/><text x="26" y="44" font-family="Cochin, Palatino, Georgia, serif" font-size="22" fill="#d9b25f">Volley</text><text x="26" y="70">Ranged + Siege count</text><text x="26" y="90">Walls: Siege only</text><text x="26" y="110">Warded: untargetable</text><text x="26" y="130">Unspent Ranged carries</text><line x1="26" y1="142" x2="194" y2="142" stroke="#3d3128"/><text x="26" y="162" fill="#a8977a" font-size="12">readout: Strike</text><text x="26" y="180" fill="#a8977a" font-size="12">bar: To Guard ▸</text><rect x="255" y="14" width="200" height="176" rx="12" fill="#211a16" stroke="#d9b25f" stroke-width="1.5"/><text x="271" y="44" font-family="Cochin, Palatino, Georgia, serif" font-size="22" fill="#d9b25f">Guard</text><text x="271" y="70">One foe at a time</text><text x="271" y="90">Swift: double block</text><text x="271" y="110">Ember/Frost attack:</text><text x="271" y="130">off-element block halved</text><line x1="271" y1="142" x2="439" y2="142" stroke="#3d3128"/><text x="271" y="162" fill="#a8977a" font-size="12">readout: Guard</text><text x="271" y="180" fill="#a8977a" font-size="12">bar: Take the hits ▸</text><rect x="500" y="14" width="200" height="176" rx="12" fill="#211a16" stroke="#e2552d" stroke-width="1.5"/><text x="516" y="44" font-family="Cochin, Palatino, Georgia, serif" font-size="22" fill="#e2552d">Damage</text><text x="516" y="70">Each unguarded foe hits</text><text x="516" y="90">Take wounds, or an</text><text x="516" y="110">unwounded companion</text><text x="516" y="130">absorbs its armor</text><line x1="516" y1="142" x2="684" y2="142" stroke="#3d3128"/><text x="516" y="162" fill="#a8977a" font-size="12">readout: per-foe buttons</text><text x="516" y="180" fill="#a8977a" font-size="12">bar: disabled; advances itself</text><rect x="745" y="14" width="200" height="176" rx="12" fill="#211a16" stroke="#d9b25f" stroke-width="1.5"/><text x="761" y="44" font-family="Cochin, Palatino, Georgia, serif" font-size="22" fill="#d9b25f">Strike</text><text x="761" y="70">All attack counts</text><text x="761" y="90">Spends every counted kind</text><text x="761" y="110">Resist halves that element</text><text x="761" y="130">Survivors keep the site</text><line x1="761" y1="142" x2="929" y2="142" stroke="#3d3128"/><text x="761" y="162" fill="#a8977a" font-size="12">readout: Strike</text><text x="761" y="180" fill="#a8977a" font-size="12">bar: Break off ▸ / End battle</text></g><g stroke="#d9b25f" stroke-width="1.6" fill="none" marker-end="url(#ar)"><line x1="212" y1="102" x2="252" y2="102"/><line x1="457" y1="102" x2="497" y2="102"/><line x1="702" y1="102" x2="742" y2="102"/></g><path d="M355,192 C355,250 845,250 845,196" stroke="#8a7458" stroke-width="1.4" stroke-dasharray="5 5" fill="none" marker-end="url(#ar)"/><text x="600" y="262" font-size="12" fill="#a8977a" text-anchor="middle">bar reads “To Strike ▸” when every remaining foe is guarded, snared or defeated: Damage is skipped</text></svg>
+  </div>
+
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:07-battle-volley}}" alt="Volley phase: Cinder Hounds targeted, Power 2 vs Armor 3 in red, Strike disabled">
+      <span class="mk" style="--x:26%;--y:9.1%">1</span><span class="mk" style="--x:96%;--y:12%">2</span><span class="mk" style="--x:52%;--y:35.4%">3</span>
+      <span class="mk" style="--x:65%;--y:39%">4</span><span class="mk" style="--x:32%;--y:43%">5</span><span class="mk" style="--x:76%;--y:75.5%">6</span>
+      <span class="mk" style="--x:38%;--y:80.6%">7</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Volley</p>
+      <ol class="co">
+        <li>Phase tabs: Volley is current.</li>
+        <li>Tapped foe (Cinder Hounds) gets a gold outline. Tap again to untarget. With one valid target it is selected automatically.</li>
+        <li>Readout: <b>Power 2 vs Armor 3</b>, red because it is not enough (green when it is).</li>
+        <li>Sums by kind: “Ranged 2 · Siege 0”, from Hunter's Shot.</li>
+        <li><b>Strike</b>, disabled until power covers the targets' total armor.</li>
+        <li><b>To Guard ▸</b> moves on without striking.</li>
+        <li>The Shieldmaidens companion.</li>
+      </ol>
+      <p class="q">Query: <code>dev=combat&amp;click=.hand .card:nth-child(1) .c-art svg;[data-mode="basic"];.foe:nth-child(2) .f-art svg</code></p>
+    </div>
+  </figure>
+  <p><b>Volley.</b> Play Ranged or Siege cards, tap foes to target them, then Strike. Behind walls (keeps, spires, the citadel) only Siege counts, and the readout says so. Warded foes cannot be targeted yet; tapping one toasts “Warded: cannot be targeted in the Volley”.</p>
+
+  <figure class="fig flip">
+    <div class="phone"><img src="{{shot:08-battle-guard}}" alt="Guard phase: Block 3 of 6 vs Wolf Riders">
+      <span class="mk" style="--x:51%;--y:9.1%">1</span><span class="mk" style="--x:4%;--y:12%">2</span><span class="mk" style="--x:68%;--y:35.4%">3</span>
+      <span class="mk" style="--x:94%;--y:38.6%">4</span><span class="mk" style="--x:32%;--y:45.2%">5</span><span class="mk" style="--x:76%;--y:75.5%">6</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Guard</p>
+      <ol class="co">
+        <li>Guard is current.</li>
+        <li>One foe is selected at a time (the first unguarded foe by default). Tap another foe to switch.</li>
+        <li><b>Block 3 of 6 vs Wolf Riders</b>, red: not enough.</li>
+        <li>“Your block: 3. Unguarded it deals 3 damage (2 wounds). Swift: needs double block.” Element notes appear here for Ember or Frost attackers.</li>
+        <li><b>Guard</b>, disabled until block covers the need.</li>
+        <li><b>Take the hits ▸</b> goes to Damage. It reads <b>To Strike ▸</b> when nothing is left unguarded.</li>
+      </ol>
+      <p class="q">Query: <code>dev=guard&amp;click=.hand .card:nth-child(2) .c-art svg;[data-mode="basic"]</code></p>
+    </div>
+  </figure>
+
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:09-battle-damage}}" alt="Damage phase: Wolf Riders deals 3 damage, Take 2 wounds or Shieldmaidens absorb 5">
+      <span class="mk" style="--x:76%;--y:9.1%">1</span><span class="mk" style="--x:76%;--y:35.4%">2</span><span class="mk" style="--x:94%;--y:38.4%">3</span>
+      <span class="mk" style="--x:4%;--y:42.5%">4</span><span class="mk" style="--x:95%;--y:44.6%">5</span><span class="mk" style="--x:89%;--y:75.5%">6</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Damage</p>
+      <ol class="co">
+        <li>Damage is current.</li>
+        <li>The first foe not yet dealt with: <b>Wolf Riders deals 3 damage</b>.</li>
+        <li>“Your armor is 2: each 2 damage, or part of it, is one wound.”</li>
+        <li><b>Take 2 wounds</b>: wound cards go into the hand. One foe can inflict at most your hand limit in wounds.</li>
+        <li><b>Shieldmaidens absorb 5</b>: an unwounded companion takes the blow and becomes wounded. Venomous foes slay the companion instead.</li>
+        <li>The action bar button is disabled (“Assign damage above”) until every unguarded foe has been assigned. Then the battle moves to Strike by itself.</li>
+      </ol>
+      <p class="q">Query: <code>dev=damage</code></p>
+    </div>
+  </figure>
+
+  <figure class="fig flip">
+    <div class="phone"><img src="{{shot:10-battle-strike}}" alt="Strike phase: Power 5 vs Armor 4 in green against Wolf Riders">
+      <span class="mk" style="--x:97%;--y:9.1%">1</span><span class="mk" style="--x:4%;--y:12%">2</span><span class="mk" style="--x:64%;--y:35.4%">3</span>
+      <span class="mk" style="--x:94%;--y:38.6%">4</span><span class="mk" style="--x:32%;--y:43%">5</span><span class="mk" style="--x:76%;--y:75.5%">6</span>
+      <span class="mk" style="--x:31%;--y:80.6%">7</span><span class="mk" style="--x:90%;--y:85%">8</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Strike</p>
+      <ol class="co">
+        <li>Strike is current; earlier tabs are marked done.</li>
+        <li>Wolf Riders targeted.</li>
+        <li><b>Power 5 vs Armor 4</b>, green.</li>
+        <li>“Ranged 0 · Siege 0 · Melee 2 + Ember 3”. Elemental attack is coloured.</li>
+        <li><b>Strike</b> is enabled.</li>
+        <li><b>Break off ▸</b>: leave with survivors keeping the site. Reads <b>End battle</b> once all foes are defeated.</li>
+        <li>Shieldmaidens are wounded (red pill, ✖) after absorbing the Wolf Riders.</li>
+        <li>Two Wound cards from the Cinder Hounds' 4 damage.</li>
+      </ol>
+      <p class="q">Query: <code>dev=strike&amp;click=.hand .card:nth-child(3) .c-art svg;[data-mode="basic"];.hand .card:nth-child(3) .c-art svg;[data-mode="basic"];.foe:nth-child(1) .f-art svg</code></p>
+    </div>
+  </figure>
+  <div class="note"><div class="h">Strike rules the readout applies</div>
+    <ul>
+      <li>All attack counts in the Strike: Ranged, Siege and Melee. Attack played in an earlier phase is kept for the Strike.</li>
+      <li>A strike spends all attack of the kinds that count, even if more than needed.</li>
+      <li>If any chosen target resists an element, all attack of that element is halved for the whole strike (rounded down at the end). The readout adds “Ember attack is halved by resistance.”</li>
+      <li>Defeated foes stay defeated. Survivors keep the site; you may return.</li>
+    </ul>
+  </div>
+
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:23-citadel}}" alt="Citadel battle with three foes and the walls note">
+      <span class="mk" style="--x:4%;--y:26%">1</span><span class="mk" style="--x:96%;--y:30%">2</span><span class="mk" style="--x:96%;--y:45%">3</span>
+      <span class="mk" style="--x:32%;--y:51.8%">4</span><span class="mk" style="--x:61%;--y:68.4%">5</span><span class="mk" style="--x:4%;--y:91%">6</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">The citadel: walls and wards</p>
+      <ol class="co">
+        <li>The Ashen Tyrant: armor 8, Ember attack 6, Warded, Unyielding, resists Ember.</li>
+        <li>Ash Seer resists both Ember and Frost. Dread Knight (middle) is Brutal.</li>
+        <li>Notes: “Walls: only Siege attacks count in the Volley. Warded foes cannot be targeted yet.” The sums show only Siege.</li>
+        <li>No target selected: “Tap a foe to target it”, Strike disabled.</li>
+        <li>Shards: two Ember, one Frost, one Radiant.</li>
+        <li>Hand of advanced cards, arcana and a relic (Wyrmtooth Blade, “Unleash:”). Three foes fit in one row.</li>
+      </ol>
+      <p class="q">Query: <code>dev=citadel</code></p>
+    </div>
+  </figure>
+</section>
+
+<!-- 8 -->
+<section id="choices">
+  <div class="num">Section 8</div>
+  <h2>Choices and rewards</h2>
+  <div class="src">Built by <code>pendingSheet()</code> from the top of <code>G.pending</code>, options from <code>E.pendingOptions</code>. Each button dispatches <code>{type:'choose', index}</code>.</div>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:11-reward}}" alt="Level 2 reward sheet offering three advanced cards with Take buttons">
+      <span class="mk" style="--x:51%;--y:6.2%">1</span><span class="mk" style="--x:4%;--y:62.4%">2</span><span class="mk" style="--x:94%;--y:67%">3</span>
+      <span class="mk" style="--x:61%;--y:91%">4</span><span class="mk" style="--x:58%;--y:96.4%">5</span><span class="mk" style="--x:73%;--y:43.4%">6</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Level 2 after clearing a camp</p>
+      <ol class="co">
+        <li>Renown 4 of 8, level 2.</li>
+        <li>“Level 2: take an advanced card.” No grab bar: the sheet is modal.</li>
+        <li>▲ marks an advanced card.</li>
+        <li><b>Take</b> buttons, one per offer.</li>
+        <li>“It goes on top of your deck.”</li>
+        <li>The cleared camp's badge is dimmed.</li>
+      </ol>
+      <p class="q">Query: <code>dev=levelup</code></p>
+    </div>
+  </figure>
+  <p>A pending choice always wins over any other sheet and blocks map taps, End turn and new plays until resolved. The kinds:</p>
+  <ul>
+    <li><b>Choose one</b>: a card with alternative effects (for example Steady Hand: Attack 2 or Block 2).</li>
+    <li><b>Which aspect</b>: gain an essence or a shard of an aspect you pick.</li>
+    <li><b>Ready which companion?</b></li>
+    <li><b>Snare which foe?</b> or <b>Which foe gets Armor −N?</b> during battle.</li>
+    <li><b>Rewards</b>: a skill on even levels (Learn), an advanced card on level-up, an arcana from a spire's library, a relic from a barrow, ruin or lair. Cards taken go on top of the deck.</li>
+  </ul>
+  <p>Several pending entries stack. Levelling up queues a skill and an advanced card; the advanced card shows first.</p>
+</section>
+
+<!-- 9 -->
+<section id="sites">
+  <div class="num">Section 9</div>
+  <h2>Sites and trading</h2>
+  <div class="src">The Site button opens <code>hexSheet</code> for the hero's hex, which appends <code>shopHTML()</code> (from <code>E.shopOptions</code>). Companion sheet: <code>unitSheet(i)</code>, options from <code>E.unitOptions</code>.</div>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:12-shop}}" alt="Sanctum sheet with 6 Sway, a healer, three companions and advanced cards">
+      <span class="mk" style="--x:96%;--y:27.6%">1</span><span class="mk" style="--x:96%;--y:34%">2</span><span class="mk" style="--x:76%;--y:44.2%">3</span>
+      <span class="mk" style="--x:96%;--y:45.8%">4</span><span class="mk" style="--x:4%;--y:63.2%">5</span><span class="mk" style="--x:52%;--y:80.6%">6</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Sanctum after playing Rallying Banner (empowered)</p>
+      <ol class="co">
+        <li>“You have <b>6 Sway</b>. Play Sway cards before trading. Trading ends your movement for the turn.” With a non-zero Standing modifier it adds “(includes +N from Standing)”.</li>
+        <li><b>Healer</b>: 2 Sway at a sanctum, 3 at a village. Removes one wound from the hand.</li>
+        <li><b>Companions (1/2 command)</b>: used slots of the command limit.</li>
+        <li>Affordable offers are gold.</li>
+        <li>Unaffordable or blocked offers are disabled with a reason: “Not enough Sway” or “No free command slot”.</li>
+        <li><b>Advanced cards</b> for 6 Sway each (Arcana for 8 at a conquered spire). Tap a card face to zoom it.</li>
+      </ol>
+      <p class="q">Query: <code>dev=shop&amp;sheet=hex</code></p>
+    </div>
+  </figure>
+  <p>Villages, sanctums, conquered keeps and conquered spires trade. Buying anything sets Move to 0 and counts as the turn's action, but the sheet stays open (<code>keepSheet</code>) so you can keep buying. You cannot trade on a turn you fought (“You fought this turn. Come back next turn to trade.”).</p>
+  <div class="pair">
+    <figure>
+      <div class="phone"><img src="{{shot:21-companion}}" alt="Peasant Levy companion sheet, spent, with disabled abilities and a Dismiss button"></div>
+      <figcaption>Companion sheet: armor and state (“Spent: readies at the start of the next round.”), one button per ability (disabled while spent; one use spends them for the round), Heal them when wounded and Heal is banked, and Dismiss outside battle. Query: <code>dev=shop&amp;sheet=unit&amp;i=0</code></figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="wounds">
+  <div class="num">Section 10</div>
+  <h2>Wounds and recovery</h2>
+  <div class="src">Wound sheet: the wound branch of <code>cardSheet</code>. Recover: <code>recoverSheet()</code>, dispatching <code>{type:'recover', index}</code>.</div>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:13-recover}}" alt="Recover sheet: give up one card to discard all wounds">
+      <span class="mk" style="--x:4%;--y:64%">1</span><span class="mk" style="--x:96%;--y:70.4%">2</span><span class="mk" style="--x:4%;--y:94.7%">3</span>
+    </div>
+    <div class="figtext">
+      <p class="cap">Recover sheet</p>
+      <ol class="co">
+        <li>Opened by the Recover button.</li>
+        <li>“Give up one card to send all 1 wound(s) in your hand to the discard pile. You cannot move or act this turn.”</li>
+        <li>One <b>Give up</b> button per non-wound card. The row scrolls sideways.</li>
+      </ol>
+      <p class="q">Query: <code>dev=night&amp;sheet=recover</code></p>
+    </div>
+  </figure>
+  <ul>
+    <li>Wounds are dead cards in hand. Holding as many as your hand limit knocks you out and you lose the rest of your hand.</li>
+    <li>Tap a wound to read its sheet. When Heal is banked (from Field Dressing, a healer or a companion), it offers <b>Heal this wound (1 Heal)</b>, which removes it for good.</li>
+    <li><b>Recover</b> uses the whole turn. If the hand is all wounds, the sheet becomes “Catch your breath” and sets aside up to 2.</li>
+    <li>With a wound in hand and nothing played, End turn is blocked until you play a card, discard one, or recover.</li>
+  </ul>
+</section>
+
+<!-- 11 -->
+<section id="info">
+  <div class="num">Section 11</div>
+  <h2>Hero, cards, menu, rules</h2>
+  <div class="pair">
+    <figure>
+      <div class="phone"><img src="{{shot:14-hero}}" alt="Hero sheet for Kaela Cinderblade"></div>
+      <figcaption><b>Hero</b> (<code>heroSheet</code>): level and renown to next level, armor (damage per wound), hand limit, command, standing with its Sway modifier, score, skills. Query: <code>dev=shop&amp;sheet=hero</code></figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><img src="{{shot:15-deck}}" alt="Your cards sheet: deck of 11 with order hidden, discard and played"></div>
+      <figcaption><b>Cards</b> (<code>deckSheet</code>): deck (count and contents, alphabetical so the order stays hidden), discard, played this turn, and when the round can end. Query: <code>seed=7&amp;sheet=deck</code></figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><img src="{{shot:17-menu}}" alt="Menu sheet"></div>
+      <figcaption><b>Menu</b> (<code>menuSheet</code>): How to play, Hero, Cards, Chronicle, Save and quit to title, Abandon this game (red; no confirmation). Version and seed at the bottom. Query: <code>seed=7&amp;sheet=menu</code></figcaption>
+    </figure>
+    <figure>
+      <div class="phone"><img src="{{shot:18-rules}}" alt="How to play sheet"></div>
+      <figcaption><b>How to play</b> (<code>rulesSheet</code>): the in-app rulebook. Trait and site lists are generated from <code>TRAIT_INFO</code> and <code>SITES</code>. Query: <code>seed=7&amp;sheet=rules</code></figcaption>
+    </figure>
+  </div>
+  <p>The <b>Chronicle</b> (<code>logSheet</code>) lists the game log, newest first. It opens from the book button on the map, the menu, or the result sheet.</p>
+</section>
+
+<!-- 12 -->
+<section id="end">
+  <div class="num">Section 12</div>
+  <h2>End of game</h2>
+  <figure class="fig">
+    <div class="phone"><img src="{{shot:20-victory}}" alt="Victory sheet: The Citadel has fallen, score 57"></div>
+    <div class="figtext">
+      <p class="cap">Result sheet (<code>resultSheet</code>)</p>
+      <p>Modal. Crown and “The Citadel has fallen” on a win; skull and “The Marches are lost” otherwise. Then the round of the win, the score, level, foes defeated and sites taken, with <b>Back to title</b> and <b>Read the chronicle</b>.</p>
+      <p>This shot is a forced state (<code>dev=won</code> sets a win with score 57 on the first turn), so the stats read level 1, 0 foes, 0 sites.</p>
+      <p>The game also ends when the last night ends: the action bar's <b>Concede</b> (in the final round, with the deck empty) asks for confirmation first.</p>
+      <p class="q">Query: <code>dev=won</code></p>
+    </div>
+  </figure>
+</section>
+
+<!-- 13 -->
+<section id="examples">
+  <div class="num">Section 13</div>
+  <h2>Worked examples</h2>
+  <p>Tap by tap. Numbers are from <code>data.js</code> and were checked by running the engine under Node with the same setup as the dev scenarios.</p>
+
+  <div class="ex">
+    <h3>1. Move two hexes with an empowered card</h3>
+    <p>Seed 7, Kaela, first turn. Hand: Fair Words, Field Dressing, Trailcraft, Hewing Blow, Trailcraft. Shots 02, 03, 04.</p>
+    <ol class="steps">
+      <li>Tap the first <b>Trailcraft</b> (third card). Its sheet opens (shot 03).</li>
+      <li>Tap <b>Empower</b>. It costs one Verdant essence. You have none stored, so the free daytime sky essence (Radiant or Verdant) pays. <span class="math">Move 4</span></li>
+      <li>The sheet closes. Four plains hexes glow with green <b>2</b> badges; Essence drops to 0; Undo lights (shot 04).</li>
+      <li>Tap a glowing hex. The hero moves, the map recentres, and new land is revealed. <span class="math">Move 4 − 2 = 2</span> Because a reveal changed <code>state.irrev</code>, Undo is cleared.</li>
+      <li>Tap another glowing hex with a green 2. <span class="math">Move 0</span> Hexes you can no longer afford (one costs 3 after the first step east) show grey dashed badges.</li>
+      <li>Tap <b>End turn</b>. You keep the unplayed cards and draw back to your hand limit.</li>
+    </ol>
+  </div>
+
+  <div class="ex">
+    <h3>2. A whole battle against Wolf Riders and Cinder Hounds</h3>
+    <p>The <code>dev=combat</code> scenario: Kaela (armor 2, hand limit 5), one Shieldmaidens companion (armor 5). Hand: Hunter's Shot, Shieldwork, Hewing Blow, Cinder Lash, Sidestep, Steady Hand. Shots 06–10.</p>
+    <div class="tw"><table>
+      <tr><th>Foe</th><th>Armor</th><th>Attack</th><th>Notes</th></tr>
+      <tr><td>Wolf Riders</td><td>4</td><td>3</td><td>Swift (block needs double). Renown 3.</td></tr>
+      <tr><td>Cinder Hounds</td><td>3</td><td class="k-ember">4 Ember</td><td>Resists Ember. Renown 3.</td></tr>
+    </table></div>
+    <ol class="steps">
+      <li><b>Attack.</b> From the camp's hex sheet, tap <b>Attack</b> (shot 06). The stage becomes the battle panel at Volley.</li>
+      <li><b>Volley.</b> Tap Hunter's Shot → <b>Play</b>: <span class="math">Ranged 2</span>. Tap Cinder Hounds: <span class="math">Power 2 vs Armor 3</span> in red (shot 07). Wolf Riders need 4, both together 7. Ranged 2 cannot kill anything, so do not strike: Ranged that is not spent carries into the Strike. Tap <b>To Guard ▸</b>.</li>
+      <li><b>Guard, Wolf Riders.</b> They are selected first. Swift doubles the block needed: <span class="math">3 × 2 = 6</span>. Shieldwork gives <span class="math">Block 3 of 6</span> (shot 08). Even empowered (Block 5) it falls short.</li>
+      <li><b>Guard, Cinder Hounds.</b> Their attack is Ember, so only Frost and Pure block count in full; plain block is halved. Shieldwork's 3 becomes <span class="math">⌊3 ÷ 2⌋ = 1 of 4</span>. Sidestep empowered gives Frost Block 4, but it needs Frost essence, which neither the day sky nor Kaela's Ember shard provides.</li>
+      <li>Neither foe can be guarded well, so tap <b>Take the hits ▸</b>. (In the shots for the later phases the scenario skipped the earlier plays, so Hunter's Shot and Shieldwork are back in hand and Ranged reads 0.)</li>
+      <li><b>Damage, Wolf Riders: 3.</b> With armor 2, each 2 damage or part of it is a wound: <span class="math">⌈3 ÷ 2⌉ = 2 wounds</span>. Or tap <b>Shieldmaidens absorb 5</b>: their armor 5 covers all 3, and they become wounded (shot 09). Choose the Shieldmaidens.</li>
+      <li><b>Damage, Cinder Hounds: 4.</b> The Shieldmaidens are used, so tap <b>Take 2 wounds</b>: <span class="math">⌈4 ÷ 2⌉ = 2 wounds</span>. Two Wound cards enter the hand and the battle moves to Strike.</li>
+      <li><b>Strike.</b> Play Hewing Blow (<span class="math">Attack 2</span>) and Cinder Lash (<span class="math">Ember Attack 3</span>). Tap Wolf Riders: <span class="math">2 + 3 = Power 5 vs Armor 4</span> in green (shot 10). Tap <b>Strike</b>. Wolf Riders are defeated, renown +3.</li>
+      <li><b>Why not both?</b> Adding the Hounds raises the need to <span class="math">4 + 3 = 7</span>, and because the Hounds resist Ember, the Ember part is halved for the whole strike: <span class="math">2 + 3 ÷ 2 = 3.5 → 3 vs 7</span>. The strike would also spend all the attack. Strike mixed foes one at a time.</li>
+      <li><b>Level up mid-battle.</b> Renown reaches 3, the level 2 threshold. Two modal reward sheets open: an advanced card, then a skill (<a href="#choices">section 8</a>). Resolve them to continue.</li>
+      <li><b>Finish the Hounds.</b> The day's sky essence is still unused. Tap Steady Hand → <b>Empower</b> (Radiant): <span class="math">Attack 3 vs Armor 3</span>, physical, not resisted. Strike. The camp is cleared, Standing +1, and the action bar reads <b>End battle</b>. If you had kept the Ranged 2 from the Volley, it would also count here.</li>
+    </ol>
+  </div>
+
+  <div class="ex">
+    <h3>3. Recruit and heal at a sanctum</h3>
+    <p>The <code>dev=shop</code> scenario: Kaela on a sanctum, Peasant Levy (spent) in a command of 2, a wound in hand, Rallying Banner already empowered for <span class="math">Sway 6</span>. Shot 12.</p>
+    <ol class="steps">
+      <li>Tap <b>Site</b>. The Sanctum sheet lists 6 Sway, the Healer for 2, Hedge Healer for 5, and two 7-Sway companions marked “Not enough Sway”.</li>
+      <li>6 Sway covers the healer or the Hedge Healer, not both (<span class="math">2 + 5 = 7</span>). Close the sheet and play <b>Fair Words</b> first: <span class="math">Sway 6 + 2 = 8</span>. Sway cards must be played before trading.</li>
+      <li>Tap <b>Site</b> again, then the Healer's <b>2 Sway</b>. The wound leaves the hand. <span class="math">8 − 2 = 6</span> The sheet stays open.</li>
+      <li>Tap Hedge Healer's <b>5 Sway</b>. They join the party (command 2 of 2). <span class="math">6 − 5 = 1</span></li>
+      <li>Trading set Move to 0 and used the turn's action. Tap <b>End turn</b>.</li>
+    </ol>
+  </div>
+
+  <div class="ex">
+    <h3>4. Recover from wounds</h3>
+    <p>The <code>dev=night</code> scenario: Night 1, a Wound in hand with seven other cards. Shots 19 and 13.</p>
+    <ol class="steps">
+      <li>At the start of the turn, before moving or playing anything, the action bar shows <b>Recover</b> (shot 19). End turn is dim.</li>
+      <li>Tap <b>Recover</b>. The sheet offers a <b>Give up</b> button under each non-wound card (shot 13).</li>
+      <li>Tap Give up under the card you value least. It goes to the discard pile, and every wound in hand goes there too.</li>
+      <li>Recovering ends your actions: Move is 0 and you cannot fight or trade. Tap <b>End turn</b> to draw back up.</li>
+    </ol>
+    <p>The wounds are not gone: they come back when the discard is reshuffled. Only Heal removes a wound for good.</p>
+  </div>
+</section>
+
+<!-- 14 -->
+<section id="agent">
+  <div class="num">Section 14</div>
+  <h2>For the next agent</h2>
+  <h3>File map</h3>
+  <div class="tw"><table>
+    <tr><th>Screen or part</th><th><code>public/app.mjs</code></th></tr>
+    <tr><td>Title</td><td><code>renderTitle</code></td></tr>
+    <tr><td>Game column</td><td><code>renderGame</code> → <code>topHTML</code>, <code>mapSVG</code> + <code>applyView</code> or <code>battleHTML</code>, <code>stripHTML</code>, <code>hintText</code>, <code>actionsHTML</code>, <code>partyHTML</code>, <code>handHTML</code></td></tr>
+    <tr><td>Shared pieces</td><td><code>cardHTML</code>, <code>foeHTML</code>, <code>poolText</code>, <code>fixSelection</code> (battle targeting), <code>decor</code> (terrain art)</td></tr>
+    <tr><td>Sheet router</td><td><code>renderSheet</code>, wrapper <code>sheetWrap(inner, {modal})</code></td></tr>
+    <tr><td>Sheets</td><td><code>cardSheet</code>, <code>unitSheet</code>, <code>skillSheet</code>, <code>hexSheet</code> + <code>shopHTML</code>, <code>pendingSheet</code>, <code>recoverSheet</code>, <code>heroSheet</code>, <code>deckSheet</code>, <code>essenceSheet</code>, <code>logSheet</code>, <code>menuSheet</code>, <code>rulesSheet</code>, <code>resultSheet</code>; <code>zoom</code> and <code>concede</code> inline in <code>renderSheet</code></td></tr>
+    <tr><td>Input</td><td>click delegate + <code>ACTS</code>; pointer handlers + <code>onHexTap</code>; <code>swallowClickUntil</code></td></tr>
+    <tr><td>State</td><td><code>dispatch</code>, <code>undo</code>, <code>save</code>, <code>loadSave</code>, <code>startGame</code>, <code>toast</code></td></tr>
+    <tr><td>Dev</td><td><code>devScenario</code>, <code>boot</code> (query parameters)</td></tr>
+  </table></div>
+  <p><code>public/style.css</code> sections, in order: tokens and base, <b>title</b>, <b>game layout</b> (top bar, stage, strip, hint, actions, party, hand), <b>cards</b>, <b>battle</b>, <b>sheets</b>.</p>
+  <p>Engine helpers the UI calls (all in <code>engine.js</code>): <code>act</code>, <code>moveOptions</code>, <code>attackOptions</code>, <code>cardOptions</code>, <code>unitOptions</code>, <code>shopOptions</code>, <code>pendingOptions</code>, <code>strikePower</code>, <code>blockPower</code>, <code>blockNeeded</code>, <code>canTarget</code>, <code>enemyArmor</code>, <code>endTurnBlocker</code>, <code>canEndRound</code>, <code>canRecover</code>, <code>skillOk</code>, plus read-outs such as <code>armor</code>, <code>handLimit</code>, <code>swayAvail</code>, <code>standingMod</code>, <code>tideAspects</code>, <code>shopHere</code>, <code>heroHex</code>, <code>nextThreshold</code>, <code>score</code>, <code>effectText</code>, <code>cardCost</code>.</p>
+
+  <h3>How a tap flows</h3>
+  <div class="chain"><span>data-act</span><em>→</em><span>ACTS[...]</span><em>→</em><span>dispatch()</span><em>→</em><span>E.act()</span><em>→</em><span>save()</span><em>→</em><span>render()</span></div>
+  <p>Pure UI state (open sheet, battle targets, map view, hero pick) lives in <code>ui</code>, not in the saved game. Sheet-only changes call <code>renderSheet()</code> without a full render. To add a control: give it <code>data-act="name"</code> plus <code>data-*</code> arguments, add <code>ACTS.name</code>, and let the engine validate.</p>
+
+  <h3>Undo</h3>
+  <p><code>dispatch</code> pushes a JSON snapshot before every accepted action. When <code>state.irrev</code> changes (a draw, a reveal, a shuffle, starting a battle), the history is cleared, so hidden information can never be undone. <code>undo()</code> pops one snapshot or toasts “Nothing to undo (new information was revealed)”.</p>
+
+  <h3>Dev query parameters</h3>
+  <div class="tw"><table>
+    <tr><th>Parameter</th><th>Effect</th></tr>
+    <tr><td><code>?seed=7</code></td><td>New game from a seed (default 7 when only <code>dev</code> or <code>auto</code> is given).</td></tr>
+    <tr><td><code>?hero=orrin</code></td><td>Hero for that game (default <code>kaela</code>).</td></tr>
+    <tr><td><code>?auto=N</code></td><td>The bot (<code>tests/helpers.mjs</code>, <code>smartTurn</code>) plays N turns first.</td></tr>
+    <tr><td><code>?dev=…</code></td><td><code>combat</code>, <code>guard</code>, <code>damage</code>, <code>strike</code>, <code>camp</code>, <code>citadel</code>, <code>shop</code>, <code>levelup</code>, <code>reward</code>, <code>night</code>, <code>explored</code>, <code>won</code>. <code>camp</code> is new in the working tree and missing from the README.</td></tr>
+    <tr><td><code>?sheet=TYPE&amp;i=N</code></td><td>Open a sheet; also <code>id=</code> and <code>hexkey=</code> (default the hero's hex).</td></tr>
+    <tr><td><code>?click=sel;sel</code></td><td>Click CSS selectors in order, 30 ms apart. <code>hex:q,r</code> entries call <code>onHexTap</code>.</td></tr>
+  </table></div>
+  <p>Screenshots: <code>npm run serve</code> (port 8477), then <code>tools/shot.sh out.png 'query' 760</code>. It runs headless Chrome at 390 px wide, 2× scale, through <code>tools/frame.html</code>. After any change under <code>public/</code>, run <code>python3 -I tools/build_sw.py public emberwake</code> to rebuild the service worker and version.</p>
+  <p>This page is built by <code>docs/ui-guide/build.py</code> from <code>src.html</code> and <code>shots/</code>.</p>
+
+  <h3>Known limits</h3>
+  <ul>
+    <li>Checked in headless Chrome only, at 660 and 760 px tall.</li>
+    <li>One real-phone fault found and fixed so far: after a hex tap opened a sheet on <code>pointerup</code>, the browser's follow-up click landed on the new backdrop and closed the sheet. <code>swallowClickUntil</code> now drops trusted clicks for 450 ms after a hex tap.</li>
+    <li>Real touch behaviour, safe-area insets and the installed (home-screen) look are otherwise unverified.</li>
+    <li>Abandon this game has no confirmation step.</li>
+  </ul>
+</section>
+
+<footer>Emberwake interface guide · screenshots from version 1ac2a233ac · built from <code>docs/ui-guide/src.html</code></footer>
+</main>
+</div>
