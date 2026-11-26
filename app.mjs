@@ -813,7 +813,11 @@ function startGame(state) {
   render();
 }
 
+// A hex tap is handled on pointerup; the browser then sends a click to whatever is under the finger,
+// which by then is the sheet's backdrop. Swallow that one click.
+let swallowClickUntil = 0;
 document.addEventListener('click', (e) => {
+  if (e.isTrusted && performance.now() < swallowClickUntil) { e.preventDefault(); return; }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const fn = ACTS[el.dataset.act];
@@ -854,7 +858,7 @@ function endPointer(e) {
   if (drag && !drag.moved && e.type === 'pointerup') {
     const el = document.elementFromPoint(e.clientX, e.clientY);
     const hex = el && el.closest && el.closest('[data-hex]');
-    if (hex) onHexTap(hex.dataset.hex);
+    if (hex) { swallowClickUntil = performance.now() + 450; onHexTap(hex.dataset.hex); }
   }
   if (pointers.size === 0) drag = null;
 }
